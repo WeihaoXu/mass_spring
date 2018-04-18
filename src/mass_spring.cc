@@ -105,7 +105,7 @@ void MassSpringSystem::animate(float delta_t) {	// update system states and refr
 		curr_node.velocity += (curr_node.force / curr_node.mass) * delta_t;
 		curr_node.position += curr_node.velocity * delta_t;
 		// curr_node.velocity -= damper_ * curr_node.velocity * delta_t;
-		curr_node.velocity *= energy_loss_;
+		curr_node.velocity = (1 - damper_ * delta_t) * curr_node.velocity;
 	}
 
 	refreshCache();

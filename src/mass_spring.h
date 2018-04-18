@@ -59,11 +59,11 @@ public:
 private:
 	bool isIndexValid(int x, int z);
 	int getNodeIndex(int x, int z);
-	const float node_mass_ = 0.025;
+	const float node_mass_ = 1.0;
 
-	const float spring_k_ = 2;
-	const float energy_loss_ = 0.95;
-	// const float damper_ = 100000;
+	const float spring_k_ = 30.0;
+	// const float energy_loss_ = 0.95;
+	const float damper_ = 10.0 / (2 * std::sqrt(node_mass_ * spring_k_));
 	const float grid_width_ = 1.0;
 	int x_size, z_size;
 	
