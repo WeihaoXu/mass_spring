@@ -16,7 +16,7 @@ MassSpringSystem::MassSpringSystem(int init_x_size, int init_z_size)
 	// create nodes
 	for(int x = 0; x < x_size; x++) {
 		for(int z = 0; z < z_size; z++) {
-			SpringNode curr_node(glm::vec3(x * grid_width_, 10.0, z * grid_width_), 1.0, false);
+			SpringNode curr_node(glm::vec3(x * grid_width_, 10.0, z * grid_width_), node_mass_, false);
 			nodes_.push_back(curr_node);
 		}
 	}
@@ -36,8 +36,19 @@ MassSpringSystem::MassSpringSystem(int init_x_size, int init_z_size)
 			}
 		}
 	}
-	refreshCache();
 
+	// set border fixed
+	for(int x = 0; x < x_size; x++) {
+		for(int z = 0; z < z_size; z++) {
+			SpringNode& curr_node = nodes_[getNodeIndex(x, z)];
+			if(x == 0 || x == x_size - 1 || z == 0 || z == z_size - 1) {
+				nodes_[getNodeIndex(x, z)].fixed = true;
+			}
+		}
+	}
+
+	// 
+	refreshCache();
 
 }
 
@@ -54,8 +65,9 @@ MassSpringSystem::~MassSpringSystem()
 
 }
 
-glm::vec3 MassSpringSystem::computeSingleForce(const SpringNode& curr_node, const SpringNode& nb_node, int init_dist) {
+glm::vec3 MassSpringSystem::computeSingleForce(const SpringNode& curr_node, const SpringNode& nb_node) {
 	float dist = glm::length(curr_node.position - nb_node.position);
+	float init_dist = glm::length(curr_node.init_position - nb_node.init_position);
 	glm::vec3 force = spring_k_ * (dist - init_dist) * glm::normalize(nb_node.position - curr_node.position);
 	return force;
 }
@@ -81,7 +93,7 @@ void MassSpringSystem::animate(float delta_t) {	// update system states and refr
 		curr_node.force = glm::vec3(0.0, -curr_node.mass * G, 0.0);
 		for(int j = 0; j < curr_node.neighbors.size(); j++) {
 			const SpringNode& nb_node = *(curr_node.neighbors[j]);
-			curr_node.force += computeSingleForce(curr_node, nb_node, curr_node.init_nb_dists[j]);
+			curr_node.force += computeSingleForce(curr_node, nb_node);
 		}
 	}
 
@@ -93,5 +105,18 @@ void MassSpringSystem::animate(float delta_t) {	// update system states and refr
 		curr_node.velocity *= energy_loss_;
 	}
 
+	refreshCache();
+}
+
+void MassSpringSystem::resetSystem() {	// update system states and refresh cache.
+	// update force
+	for(int i = 0; i < nodes_.size(); i++) {
+		SpringNode& curr_node = nodes_[i];
+		if(curr_node.fixed) continue;	// anchor node, not movable
+		curr_node.position = curr_node.init_position;
+		curr_node.velocity = glm::vec3(0.0);
+		curr_node.force = glm::vec3(0.0, -curr_node.mass * G, 0.0);
+	}
+	
 	refreshCache();
 }

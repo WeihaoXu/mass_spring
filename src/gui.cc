@@ -27,7 +27,10 @@ GUI::~GUI()
 {
 }
 
-
+void GUI::assignMassSpringSystem(MassSpringSystem* system) 
+{
+	ms_system_ = system;
+}
 
 void GUI::keyCallback(int key, int scancode, int action, int mods)
 {
@@ -56,6 +59,8 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 	
 	} else if (key == GLFW_KEY_T && action != GLFW_RELEASE) {
 		transparent_ = !transparent_;
+	} else if (key == GLFW_KEY_R && action != GLFW_RELEASE) {
+		reset_ms_system_ = true;
 	}
 }
 

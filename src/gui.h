@@ -5,6 +5,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
 
+#include "mass_spring.h"
+
 struct Mesh;
 
 /*
@@ -19,6 +21,7 @@ public:
 	GUI(GLFWwindow*);
 	~GUI();
 	// void assignMesh(Mesh*);
+	void assignMassSpringSystem(MassSpringSystem* system);
 
 	void keyCallback(int key, int scancode, int action, int mods);
 	void mousePosCallback(double mouse_x, double mouse_y);
@@ -34,6 +37,10 @@ public:
 	const glm::vec3& getCamera() const { return eye_; }
 	bool isPoseDirty() const { return pose_changed_; }
 	void clearPose() { pose_changed_ = false; }
+
+	bool toResetSystem() {return reset_ms_system_;}
+	void clearResetFlag() {reset_ms_system_ = false;}
+
 	const float* getLightPositionPtr() const { return &light_position_[0]; }
 	
 	// int getCurrentBone() const { return current_bone_; }
@@ -44,8 +51,11 @@ public:
 private:
 	GLFWwindow* window_;
 	// Mesh* mesh_;
+	MassSpringSystem* ms_system_;
 
 	int window_width_, window_height_;
+
+	bool reset_ms_system_ = false;
 
 	bool drag_state_ = false;
 	bool fps_mode_ = false;

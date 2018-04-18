@@ -232,6 +232,14 @@ int main(int argc, char* argv[])
 			gui.clearPose();
 		}
 
+		if (gui.toResetSystem()) {
+			ms_system.resetSystem();
+			gui.clearResetFlag();
+		}
+
+		float delta_t = 0.04;
+		ms_system.animate(delta_t);
+
 		// Then draw floor.
 		if (draw_floor) {
 			floor_pass.setup();
@@ -242,6 +250,7 @@ int main(int argc, char* argv[])
 		}
 
 		if (draw_cloth) {
+			cloth_pass.updateVBO(0, ms_system.node_positions.data(), ms_system.node_positions.size());
 			cloth_pass.setup();
 			// Draw our triangles.
 			CHECK_GL_ERROR(glDrawElements(GL_LINES,
