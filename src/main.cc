@@ -7,6 +7,7 @@
 #include "config.h"
 #include "gui.h"
 #include "mass_spring.h"
+#include "tictoc.h"
 
 #include <algorithm>
 #include <fstream>
@@ -90,6 +91,7 @@ int main(int argc, char* argv[])
 	create_floor(floor_vertices, floor_faces);
 
 	MassSpringSystem ms_system(20, 20);
+	TicTocTimer *timer = new TicTocTimer;
 
 
 
@@ -209,7 +211,7 @@ int main(int argc, char* argv[])
 	bool draw_floor = false;
 	bool draw_cloth = true;
 	
-
+	toc(timer);
 	while (!glfwWindowShouldClose(window)) {
 		// Setup some basic window stuff.
 		glfwGetFramebufferSize(window, &window_width, &window_height);
@@ -237,8 +239,18 @@ int main(int argc, char* argv[])
 			gui.clearResetFlag();
 		}
 
-		float delta_t = 0.04;
+		// float delta_t = 0.05;
+		float delta_t = (float) toc(timer) / 10.0;
+		// std::cout << "delta_t = " << delta_t << std::endl;
 		ms_system.animate(delta_t);
+
+		std::cout << "delta t: " << delta_t << std::endl;
+		std::cout << "force: " << glm::to_string(ms_system.nodes_[38].force) << std::endl;
+		std::cout << "velocity: " << glm::to_string(ms_system.nodes_[38].velocity) << std::endl;
+		std::cout << "position: " << glm::to_string(ms_system.nodes_[38].position) << std::endl;
+		std::cout << std::endl;
+
+
 
 		// Then draw floor.
 		if (draw_floor) {

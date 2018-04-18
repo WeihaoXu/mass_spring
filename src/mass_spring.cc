@@ -41,6 +41,7 @@ MassSpringSystem::MassSpringSystem(int init_x_size, int init_z_size)
 	for(int x = 0; x < x_size; x++) {
 		for(int z = 0; z < z_size; z++) {
 			SpringNode& curr_node = nodes_[getNodeIndex(x, z)];
+			// if(x == 0) {
 			if(x == 0 || x == x_size - 1 || z == 0 || z == z_size - 1) {
 				nodes_[getNodeIndex(x, z)].fixed = true;
 			}
@@ -68,6 +69,7 @@ MassSpringSystem::~MassSpringSystem()
 glm::vec3 MassSpringSystem::computeSingleForce(const SpringNode& curr_node, const SpringNode& nb_node) {
 	float dist = glm::length(curr_node.position - nb_node.position);
 	float init_dist = glm::length(curr_node.init_position - nb_node.init_position);
+	if(dist < init_dist) return glm::vec3(0.0);
 	glm::vec3 force = spring_k_ * (dist - init_dist) * glm::normalize(nb_node.position - curr_node.position);
 	return force;
 }
@@ -102,6 +104,7 @@ void MassSpringSystem::animate(float delta_t) {	// update system states and refr
 		if(curr_node.fixed) continue;
 		curr_node.velocity += (curr_node.force / curr_node.mass) * delta_t;
 		curr_node.position += curr_node.velocity * delta_t;
+		// curr_node.velocity -= damper_ * curr_node.velocity * delta_t;
 		curr_node.velocity *= energy_loss_;
 	}
 

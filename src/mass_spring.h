@@ -53,18 +53,20 @@ public:
 
 	std::vector<glm::vec3> node_positions;
 	std::vector<glm::uvec2> line_indices;	// indices for line mesh
+	std::vector<SpringNode> nodes_;
 
 
 private:
 	bool isIndexValid(int x, int z);
 	int getNodeIndex(int x, int z);
-	const float node_mass_ = 3;
+	const float node_mass_ = 0.025;
 
-	const float spring_k_ = 20.0;
-	const float energy_loss_ = 0.99;
-	const float grid_width_ = 2.0;
+	const float spring_k_ = 2;
+	const float energy_loss_ = 0.95;
+	// const float damper_ = 100000;
+	const float grid_width_ = 1.0;
 	int x_size, z_size;
-	std::vector<SpringNode> nodes_;
+	
 
 
 
