@@ -1,5 +1,5 @@
-#ifndef CLOTH_H
-#define CLOTH_H
+#ifndef MASS_SPRING_H
+#define MASS_SPRING_H
 
 #include "gui.h"
 
@@ -38,7 +38,7 @@ public:
 
 class MassSpringSystem {
 public:
-	MassSpringSystem(int width, int height);
+	MassSpringSystem(int x_size, int z_size);
 	~MassSpringSystem();
 
 	glm::vec3 computeSingleForce(const SpringNode& curr_node, const SpringNode& nb_node, int init_dist);
@@ -52,11 +52,18 @@ public:
 	void animate(float delta_t);
 
 	std::vector<glm::vec3> node_positions;
+	std::vector<glm::uvec2> line_indices;	// indices for line mesh
 
 
 private:
+	bool isIndexValid(int x, int z);
+	int getNodeIndex(int x, int z);
+
+
 	const float spring_k_ = 1.0;
 	const float energy_loss_ = 0.9;
+	const float grid_width_ = 2.0;
+	int x_size, z_size;
 	std::vector<SpringNode> nodes_;
 
 
@@ -76,4 +83,4 @@ private:
 
 
 
-#endif
+#endif	// end define MASS_SPRING_H

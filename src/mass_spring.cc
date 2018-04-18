@@ -1,7 +1,7 @@
-#include "cloth.h"
+#include "mass_spring.h"
 
 SpringNode::SpringNode(glm::vec3 init_pos, float init_mass, bool init_fixed)
-				:position(init_pos), mass(init_mass), fixed(init_fixed)
+				:position(init_pos), init_position(init_pos), mass(init_mass), fixed(init_fixed)
 {
 	force = glm::vec3(0.0, -mass * G, 0.0);
 }
@@ -10,8 +10,43 @@ SpringNode::~SpringNode()
 {
 }
 
-MassSpringSystem::MassSpringSystem(int width, int height) {
+MassSpringSystem::MassSpringSystem(int init_x_size, int init_z_size)
+									:x_size(init_x_size), z_size(init_z_size)
+{
+	// create nodes
+	for(int x = 0; x < x_size; x++) {
+		for(int z = 0; z < z_size; z++) {
+			SpringNode curr_node(glm::vec3(x * grid_width_, 10.0, z * grid_width_), 1.0, false);
+			nodes_.push_back(curr_node);
+		}
+	}
 
+	// connect nodes.
+	for(int x = 0; x < x_size; x++) {
+		for(int z = 0; z < z_size; z++) {
+			SpringNode& curr_node = nodes_[getNodeIndex(x, z)];
+			for(int delta_x = -1; delta_x <= 1; delta_x++) {
+				for(int delta_z = -1; delta_z <= 1; delta_z++) {
+					if(!isIndexValid(x + delta_x, z + delta_z) || delta_x == 0 && delta_z == 0) {
+						continue;
+					}
+					curr_node.neighbors.push_back(&(nodes_[getNodeIndex(x + delta_x, z + delta_z)]));
+					line_indices.push_back(glm::uvec2(getNodeIndex(x, z), getNodeIndex(x + delta_x, z + delta_z)));
+				}
+			}
+		}
+	}
+	refreshCache();
+
+
+}
+
+bool MassSpringSystem::isIndexValid(int x, int z) {
+	return x >= 0 && x < x_size && z >= 0 && z < z_size;
+}
+
+int MassSpringSystem::getNodeIndex(int x, int z) {
+	return x * z_size + z;
 }
 
 MassSpringSystem::~MassSpringSystem() 

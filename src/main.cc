@@ -6,6 +6,7 @@
 #include "render_pass.h"
 #include "config.h"
 #include "gui.h"
+#include "mass_spring.h"
 
 #include <algorithm>
 #include <fstream>
@@ -17,6 +18,7 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/io.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include <debuggl.h>
 
 int window_width = 800, window_height = 600;
@@ -36,6 +38,14 @@ const char* fragment_shader =
 
 const char* floor_fragment_shader =
 #include "shaders/floor.frag"
+;
+
+const char* cloth_vertex_shader =
+#include "shaders/cloth.vert"
+;
+
+const char* cloth_fragment_shader =
+#include "shaders/cloth.frag"
 ;
 
 // FIXME: Add more shaders here.
@@ -78,6 +88,8 @@ int main(int argc, char* argv[])
 	std::vector<glm::vec4> floor_vertices;
 	std::vector<glm::uvec3> floor_faces;
 	create_floor(floor_vertices, floor_faces);
+
+	MassSpringSystem ms_system(20, 20);
 
 
 
@@ -140,6 +152,11 @@ int main(int argc, char* argv[])
 		else
 			return &non_transparet;
 	};
+	glm::mat4 identity_model_mat(1.0);
+	auto identity_model_data = [&identity_model_mat]() -> const void* {
+		return &identity_model_mat[0][0];
+	};
+
 	// FIXME: add more lambdas for data_source if you want to use RenderPass.
 	//        Otherwise, do whatever you like here
 
@@ -152,6 +169,7 @@ int main(int argc, char* argv[])
 	ShaderUniform std_proj = { "projection", matrix_binder, std_proj_data };
 	ShaderUniform std_light = { "light_position", vector_binder, std_light_data };
 	ShaderUniform object_alpha = { "alpha", float_binder, alpha_data };
+	ShaderUniform identity_model = {"model", matrix_binder, identity_model_data };
 
 	// Floor render pass
 	RenderDataInput floor_pass_input;
@@ -167,8 +185,29 @@ int main(int argc, char* argv[])
 	//        Otherwise, do whatever you like here
 
 
+	// for(int i = 0; i < ms_system.node_positions.size(); i++) {
+	// 	std::cout << glm::to_string(ms_system.node_positions[i]) << ", ";
+	// }
+	// std::cout << std::endl;
 
-	bool draw_floor = true;
+	// for(int i = 0; i < ms_system.line_indices.size(); i++) {
+	// 	std::cout << glm::to_string(ms_system.line_indices[i]) << ", ";
+	// }
+
+	// Cloth render pass
+	RenderDataInput cloth_pass_input;
+	cloth_pass_input.assign(0, "vertex_position", ms_system.node_positions.data(), ms_system.node_positions.size(), 3, GL_FLOAT);
+	cloth_pass_input.assignIndex(ms_system.line_indices.data(), ms_system.line_indices.size(), 2);
+	
+	RenderPass cloth_pass(-1,
+			cloth_pass_input,
+			{ cloth_vertex_shader, nullptr, cloth_fragment_shader },
+			{ std_model, std_view, std_proj, std_light },
+			{ "fragment_color" }
+			);
+
+	bool draw_floor = false;
+	bool draw_cloth = true;
 	
 
 	while (!glfwWindowShouldClose(window)) {
@@ -201,6 +240,16 @@ int main(int argc, char* argv[])
 			                              floor_faces.size() * 3,
 			                              GL_UNSIGNED_INT, 0));
 		}
+
+		if (draw_cloth) {
+			cloth_pass.setup();
+			// Draw our triangles.
+			CHECK_GL_ERROR(glDrawElements(GL_LINES,
+			                              ms_system.line_indices.size() * 2,
+			                              GL_UNSIGNED_INT, 0));
+		}
+
+
 
 		// Poll and swap.
 		glfwPollEvents();
