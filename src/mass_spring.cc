@@ -86,7 +86,7 @@ glm::vec3 MassSpringSystem::computeSingleForce(const SpringNode& curr_node, cons
 
 void MassSpringSystem::refreshCache() {
 	node_positions.resize(nodes_.size());
-	// line_indices.clear();
+	line_indices.clear();
 
 	// std::cout << "refresh cache" << std::endl;
 	for(int i = 0; i < nodes_.size(); i++) {
@@ -115,7 +115,9 @@ void MassSpringSystem::animate(float delta_t) {	// update system states and refr
 		}
 	}
 
+	// https://stackoverflow.com/32776571/c-iterate-through-an-expanding-container/32776728
 	// update velocity and position (semi-Implicit Euler)
+	std::vector<SpringNode> teared_new_nodes; 
 	for(int i = 0; i < nodes_.size(); i++) {
 		auto& curr_node = nodes_[i];
 		if(!curr_node.fixed) {
@@ -129,31 +131,32 @@ void MassSpringSystem::animate(float delta_t) {	// update system states and refr
 
 		for(int nb_idx = 0; nb_idx < curr_node.neighbors.size(); nb_idx++) {
 			SpringNode& nb_node = *(curr_node.neighbors[nb_idx]);
-			checkTear(curr_node, nb_node, 2.0, nb_idx);
+			checkTear(curr_node, nb_node, 2.0, nb_idx, teared_new_nodes);
 		}
 	}
 	
-	// std::cout << "before refresh cache" << std::endl;
+	std::cout << "before refresh cache" << std::endl;
 	refreshCache();
-	// std::cout << "done refresh cache" << std::endl;
+	std::cout << "done refresh cache" << std::endl;
 }
 
-void MassSpringSystem::checkTear(SpringNode& curr_node, SpringNode& nb_node, float max_deform_rate, int nb_idx) {
+void MassSpringSystem::checkTear(SpringNode& curr_node, SpringNode& nb_node, float max_deform_rate, int nb_idx,
+									std::vector<SpringNode>& teared_new_nodes) {
 	float curr_length = glm::length(curr_node.position - nb_node.position);
 	float init_length = glm::length(curr_node.init_position - nb_node.init_position);
 	if(std::abs(curr_length) > max_deform_rate * init_length) {
 		SpringNode new_node(nodes_.size(), (curr_node.position + nb_node.position) / 2.0f, node_mass_, false);
-		// std::cout << "push new node neighbor" << std::endl;
+		std::cout << "push new node neighbor" << std::endl;
 		
 		new_node.neighbors.push_back(&curr_node);
-		// std::cout << "done push new node neighbor" << std::endl;
+		std::cout << "done push new node neighbor" << std::endl;
 
 	
-		nodes_.push_back(new_node);
-		// std::cout << "done push new node" << std::endl;
+		teared_new_nodes.push_back(new_node);
+		std::cout << "done push new node" << std::endl;
 	
 		curr_node.neighbors[nb_idx] = &nodes_[nodes_.size() - 1];
-		// std::cout << "done update neighbor" << std::endl;
+		std::cout << "done update neighbor" << std::endl;
 
 
 		// curr_node.neighbors.erase(curr_node.neighbors.begin() + nb_idx);

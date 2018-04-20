@@ -50,7 +50,8 @@ public:
 	const glm::vec3* collectNodePositions();
 
 	void animate(float delta_t);
-	void checkTear(SpringNode& curr_node, SpringNode& nb_node, float max_deform_rate, int nb_idx);
+	void checkTear(SpringNode& curr_node, SpringNode& nb_node, float max_deform_rate, int nb_idx,
+					std::vector<SpringNode>& teared_new_nodes);
 
 	void resetSystem();
 	void randomDisturb();
@@ -64,7 +65,7 @@ public:
 private:
 	bool isIndexValid(int x, int z);
 	int getNodeIndex(int x, int z);
-	const float node_mass_ = 10.0;
+	const float node_mass_ = 100.0;
 
 	const float spring_k_ = 100.0;
 
