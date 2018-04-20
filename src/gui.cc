@@ -61,6 +61,8 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 		transparent_ = !transparent_;
 	} else if (key == GLFW_KEY_R && action != GLFW_RELEASE) {
 		reset_ms_system_ = true;
+	} else if (key == GLFW_KEY_P && action != GLFW_RELEASE) {
+		to_random_disturb_ = true;
 	}
 }
 

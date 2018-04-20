@@ -15,6 +15,7 @@
 #include <string>
 #include <vector>
 
+
 #include <glm/gtx/component_wise.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/string_cast.hpp>
@@ -90,7 +91,7 @@ int main(int argc, char* argv[])
 	std::vector<glm::uvec3> floor_faces;
 	create_floor(floor_vertices, floor_faces);
 
-	MassSpringSystem ms_system(20, 20);
+	MassSpringSystem ms_system(50, 50);
 	TicTocTimer *timer = new TicTocTimer;
 
 
@@ -239,9 +240,14 @@ int main(int argc, char* argv[])
 			gui.clearResetFlag();
 		}
 
+		if (gui.toRandomDisturb()) {
+			ms_system.randomDisturb();
+			gui.clearDisturbFlag();
+		}
+
 		// float delta_t = 0.05;
-		float delta_t = (float) toc(timer) / 10.0;
-		// std::cout << "delta_t = " << delta_t << std::endl;
+		// float delta_t = (float) toc(timer) * 20;
+		float delta_t = ms_system.getPeriod() / 20.0;
 		ms_system.animate(delta_t);
 
 		std::cout << "delta t: " << delta_t << std::endl;

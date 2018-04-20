@@ -41,6 +41,9 @@ public:
 	bool toResetSystem() {return reset_ms_system_;}
 	void clearResetFlag() {reset_ms_system_ = false;}
 
+	bool toRandomDisturb() {return to_random_disturb_;}
+	void clearDisturbFlag() {to_random_disturb_ = false;}
+
 	const float* getLightPositionPtr() const { return &light_position_[0]; }
 	
 	// int getCurrentBone() const { return current_bone_; }
@@ -56,6 +59,7 @@ private:
 	int window_width_, window_height_;
 
 	bool reset_ms_system_ = false;
+	bool to_random_disturb_ = false;
 
 	bool drag_state_ = false;
 	bool fps_mode_ = false;

@@ -5,6 +5,7 @@
 #include <vector>
 
 #define G 9.8f
+#define PI 3.1416f
 
 struct SpringNode {
 public:
@@ -50,6 +51,8 @@ public:
 
 	void animate(float delta_t);
 	void resetSystem();
+	void randomDisturb();
+	float getPeriod() {return T_;}
 
 	std::vector<glm::vec3> node_positions;
 	std::vector<glm::uvec2> line_indices;	// indices for line mesh
@@ -61,9 +64,12 @@ private:
 	int getNodeIndex(int x, int z);
 	const float node_mass_ = 1.0;
 
-	const float spring_k_ = 30.0;
+	const float spring_k_ = 100.0;
+
+	float T_ = 2 * PI * std::sqrt(node_mass_ / spring_k_);
+
 	// const float energy_loss_ = 0.95;
-	const float damper_ = 10.0 / (2 * std::sqrt(node_mass_ * spring_k_));
+	const float damper_ = (0.05) * (2 * std::sqrt(node_mass_ * spring_k_));
 	const float grid_width_ = 1.0;
 	int x_size, z_size;
 	
