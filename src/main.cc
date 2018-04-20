@@ -91,8 +91,9 @@ int main(int argc, char* argv[])
 	std::vector<glm::uvec3> floor_faces;
 	create_floor(floor_vertices, floor_faces);
 
-	MassSpringSystem ms_system(50, 50);
+	MassSpringSystem ms_system(10, 10);
 	TicTocTimer *timer = new TicTocTimer;
+	*timer = tic();
 
 
 
@@ -245,16 +246,16 @@ int main(int argc, char* argv[])
 			gui.clearDisturbFlag();
 		}
 
-		// float delta_t = 0.05;
-		// float delta_t = (float) toc(timer) * 20;
-		float delta_t = ms_system.getPeriod() / 20.0;
+		
+		float delta_t = (float) toc(timer);
+		
 		ms_system.animate(delta_t);
 
-		std::cout << "delta t: " << delta_t << std::endl;
-		std::cout << "force: " << glm::to_string(ms_system.nodes_[38].force) << std::endl;
-		std::cout << "velocity: " << glm::to_string(ms_system.nodes_[38].velocity) << std::endl;
-		std::cout << "position: " << glm::to_string(ms_system.nodes_[38].position) << std::endl;
-		std::cout << std::endl;
+		// std::cout << "delta t: " << delta_t << std::endl;
+		// std::cout << "force: " << glm::to_string(ms_system.nodes_[38].force) << std::endl;
+		// std::cout << "velocity: " << glm::to_string(ms_system.nodes_[38].velocity) << std::endl;
+		// std::cout << "position: " << glm::to_string(ms_system.nodes_[38].position) << std::endl;
+		// std::cout << std::endl;
 
 
 
