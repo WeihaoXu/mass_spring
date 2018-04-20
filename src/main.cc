@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
 	std::vector<glm::uvec3> floor_faces;
 	create_floor(floor_vertices, floor_faces);
 
-	MassSpringSystem ms_system(10, 10);
+	MassSpringSystem ms_system(30, 30);
 	TicTocTimer *timer = new TicTocTimer;
 	*timer = tic();
 
