@@ -44,6 +44,8 @@ public:
 	bool toRandomDisturb() {return to_random_disturb_;}
 	void clearDisturbFlag() {to_random_disturb_ = false;}
 
+	float getTimeSpeed() {return time_speed_;}
+
 	const float* getLightPositionPtr() const { return &light_position_[0]; }
 	
 	// int getCurrentBone() const { return current_bone_; }
@@ -74,6 +76,8 @@ private:
 	float rotation_speed_ = 0.02f * 2;
 	float zoom_speed_ = 0.1f * 3;
 	float aspect_;
+
+	float time_speed_ = 1.0;
 
 	glm::vec3 eye_ = glm::vec3(0.0f, 0.1f, camera_distance_);
 	glm::vec3 up_ = glm::vec3(0.0f, 1.0f, 0.0f);

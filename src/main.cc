@@ -91,7 +91,9 @@ int main(int argc, char* argv[])
 	std::vector<glm::uvec3> floor_faces;
 	create_floor(floor_vertices, floor_faces);
 
-	MassSpringSystem ms_system(20, 20);
+	int cloth_x_size = 10;
+	int cloth_z_size = 10;
+	MassSpringSystem ms_system(cloth_x_size, cloth_z_size);
 	TicTocTimer *timer = new TicTocTimer;
 	*timer = tic();
 
@@ -247,7 +249,7 @@ int main(int argc, char* argv[])
 		}
 
 		
-		float delta_t = (float) toc(timer);
+		float delta_t = (float) toc(timer) * gui.getTimeSpeed();
 		
 		ms_system.animate(delta_t);
 
@@ -270,6 +272,8 @@ int main(int argc, char* argv[])
 
 		if (draw_cloth) {
 			cloth_pass.updateVBO(0, ms_system.node_positions.data(), ms_system.node_positions.size());
+			cloth_pass_input.assignIndex(ms_system.line_indices.data(), ms_system.line_indices.size(), 2);
+			cloth_pass.updateIndexBuffer(ms_system.line_indices.data(), ms_system.line_indices.size());
 			cloth_pass.setup();
 			// Draw our triangles.
 			CHECK_GL_ERROR(glDrawElements(GL_LINES,

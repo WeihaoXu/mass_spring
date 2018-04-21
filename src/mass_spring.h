@@ -9,7 +9,7 @@
 
 struct SpringNode {
 public:
-	SpringNode(int index, glm::vec3 init_pos, float mass, bool init_fixed = false);
+	SpringNode(int index, glm::vec3 init_pos, glm::vec3 curr_pos, float mass, bool init_fixed = false);
 	~SpringNode();
 
 	glm::vec3 position;
@@ -22,6 +22,7 @@ public:
 
 	float mass;
 	bool fixed;
+	bool teared = false;
 	int index;
 
 
@@ -41,7 +42,7 @@ public:
 	MassSpringSystem(int x_size, int z_size);
 	~MassSpringSystem();
 
-	glm::vec3 computeSingleForce(const SpringNode& curr_node, const SpringNode& nb_node);
+	glm::vec3 computeSingleForce(const SpringNode* curr_node, const SpringNode* nb_node);
 
 	void setNodeFixed(int idx);
 	void setNodeMovable(int idx);
@@ -50,8 +51,7 @@ public:
 	const glm::vec3* collectNodePositions();
 
 	void animate(float delta_t);
-	void checkTear(SpringNode& curr_node, SpringNode& nb_node, float max_deform_rate, int nb_idx,
-					std::vector<SpringNode>& teared_new_nodes);
+	void checkTear(SpringNode* curr_node, int nb_idx, float max_deform_rate, std::vector<SpringNode*>& teared_new_nodes);
 
 	void resetSystem();
 	void randomDisturb();
@@ -59,13 +59,13 @@ public:
 
 	std::vector<glm::vec3> node_positions;
 	std::vector<glm::uvec2> line_indices;	// indices for line mesh
-	std::vector<SpringNode> nodes_;
+	std::vector<SpringNode*> nodes_;
 
 
 private:
 	bool isIndexValid(int x, int z);
 	int getNodeIndex(int x, int z);
-	const float node_mass_ = 100.0;
+	const float node_mass_ = 10.0;
 
 	const float spring_k_ = 100.0;
 
