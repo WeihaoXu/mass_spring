@@ -2,7 +2,7 @@
 #include <dirent.h>
 
 // #include "bone_geometry.h"
-#include "procedure_geometry.h"
+// #include "procedure_geometry.h"
 #include "render_pass.h"
 #include "config.h"
 #include "gui.h"
@@ -38,9 +38,6 @@ const char* fragment_shader =
 #include "shaders/default.frag"
 ;
 
-const char* floor_fragment_shader =
-#include "shaders/floor.frag"
-;
 
 const char* cloth_vertex_shader =
 #include "shaders/cloth.vert"
@@ -87,10 +84,6 @@ int main(int argc, char* argv[])
 	GLFWwindow *window = init_glefw();
 	GUI gui(window);
 
-	std::vector<glm::vec4> floor_vertices;
-	std::vector<glm::uvec3> floor_faces;
-	create_floor(floor_vertices, floor_faces);
-
 	MassSpringSystem ms_system(10, 10);
 	TicTocTimer *timer = new TicTocTimer;
 	*timer = tic();
@@ -131,11 +124,7 @@ int main(int argc, char* argv[])
 	 */
 	auto std_model_data = [&mats]() -> const void* {
 		return mats.model;
-	}; // This returns point to model matrix
-	glm::mat4 floor_model_matrix = glm::mat4(1.0f);
-	auto floor_model_data = [&floor_model_matrix]() -> const void* {
-		return &floor_model_matrix[0][0];
-	}; // This return model matrix for the floor.
+	};
 	auto std_view_data = [&mats]() -> const void* {
 		return mats.view;
 	};
@@ -167,7 +156,6 @@ int main(int argc, char* argv[])
 
 	
 	ShaderUniform std_model = { "model", matrix_binder, std_model_data };
-	ShaderUniform floor_model = { "model", matrix_binder, floor_model_data };
 	ShaderUniform std_view = { "view", matrix_binder, std_view_data };
 	ShaderUniform std_camera = { "camera_position", vector3_binder, std_camera_data };
 	ShaderUniform std_proj = { "projection", matrix_binder, std_proj_data };
@@ -175,16 +163,6 @@ int main(int argc, char* argv[])
 	ShaderUniform object_alpha = { "alpha", float_binder, alpha_data };
 	ShaderUniform identity_model = {"model", matrix_binder, identity_model_data };
 
-	// Floor render pass
-	RenderDataInput floor_pass_input;
-	floor_pass_input.assign(0, "vertex_position", floor_vertices.data(), floor_vertices.size(), 4, GL_FLOAT);
-	floor_pass_input.assignIndex(floor_faces.data(), floor_faces.size(), 3);
-	RenderPass floor_pass(-1,
-			floor_pass_input,
-			{ vertex_shader, geometry_shader, floor_fragment_shader},
-			{ floor_model, std_view, std_proj, std_light },
-			{ "fragment_color" }
-			);
 	// FIXME: define more ShaderUniforms for RenderPass if you want to use it.
 	//        Otherwise, do whatever you like here
 
@@ -210,7 +188,6 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
 
-	bool draw_floor = false;
 	bool draw_cloth = true;
 	
 	toc(timer);
@@ -257,16 +234,6 @@ int main(int argc, char* argv[])
 		// std::cout << "position: " << glm::to_string(ms_system.nodes_[38].position) << std::endl;
 		// std::cout << std::endl;
 
-
-
-		// Then draw floor.
-		if (draw_floor) {
-			floor_pass.setup();
-			// Draw our triangles.
-			CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES,
-			                              floor_faces.size() * 3,
-			                              GL_UNSIGNED_INT, 0));
-		}
 
 		if (draw_cloth) {
 			cloth_pass.updateVBO(0, ms_system.node_positions.data(), ms_system.node_positions.size());
