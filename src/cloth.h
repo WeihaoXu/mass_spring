@@ -1,0 +1,91 @@
+#ifndef CLOTH_H
+#define CLOTH_H
+
+#include <vector>
+#include <glm/glm.hpp>
+#include <iostream>
+
+#define G 9.8
+#define PI 3.1416
+
+
+struct Spring;
+struct Triangle;
+
+
+struct Particle {
+	Particle(glm::vec3 init_position, float mass, glm::vec2 uv_coords);
+	~Particle();
+	
+	glm::vec3 position_;
+	glm::vec3 init_position_;
+	glm::vec3 force_;
+	glm::vec3 velocity_;
+
+	glm::vec2 uv_coords_;
+	std::vector<Spring*> springs_;
+	float mass_;
+
+};
+
+struct Triangle {
+	// std::vector<Spring*> springs;
+	std::vector<Particle*> particles_;
+
+};
+
+struct Spring {
+	Spring(Particle* p1, Particle* p2, Spring* bend_spring);
+	~Spring();
+
+	std::vector<Particle*> particles_;
+	Particle* p1_;
+	Particle* p2_;
+	Spring* bend_spring_;
+	float init_length_;
+};
+
+class Cloth {
+
+public:
+	Cloth(int x_size, int z_size);
+	~Cloth();
+	void animate(float delta_t);
+
+
+
+
+	std::vector<glm::vec3> vertices;
+	std::vector<glm::vec2> cloth_uv_coords;
+	// std::vector<glm::uvec3> faces;
+
+
+private:
+	int getParticleIdx(int x, int z);
+	bool gridCoordValid(int x, int z);
+	void refreshCache();
+
+
+
+	std::vector<Particle*> particles_;
+	std::vector<Triangle*> triangles_;
+	std::vector<Spring*> springs_;
+
+	int x_size_, z_size_;
+
+	const float grid_width_ = 10.0;
+	const float damper_ = 0.1;
+	const float struct_k_ = 1.0;
+	const float bend_sheer_k = 1.0;
+	const float particle_mass_ = 0.1;
+	const float init_height_ = 0.0;
+
+
+
+
+
+
+};
+
+
+#endif	// end define CLOTH_H

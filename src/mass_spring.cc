@@ -51,15 +51,15 @@ MassSpringSystem::MassSpringSystem(int init_x_size, int init_z_size)
 			if(x == 0 || x == x_size - 1 || z == 0 || z == z_size - 1) {
 				nodes_[getNodeIndex(x, z)]->fixed = true;
 			}
-			std::cout << "x = " << x << ", z = " << z << ", fixed? " << nodes_[getNodeIndex(x, z)]->fixed << std::endl;
+			// std::cout << "x = " << x << ", z = " << z << ", fixed? " << nodes_[getNodeIndex(x, z)]->fixed << std::endl;
 		}
 	}
 
 
-	std::cout << "system created, T = " << T_ << std::endl;
+	// std::cout << "system created, T = " << T_ << std::endl;
 	
 
-	srand (time(NULL));
+
 	
 	refreshCache();
 

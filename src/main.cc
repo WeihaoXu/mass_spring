@@ -9,6 +9,8 @@
 #include "mass_spring.h"
 #include "tictoc.h"
 
+#include "cloth.h"
+
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -20,7 +22,6 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/io.hpp>
-#include <glm/gtx/string_cast.hpp>
 #include <debuggl.h>
 
 int window_width = 800, window_height = 600;
@@ -91,12 +92,14 @@ int main(int argc, char* argv[])
 	std::vector<glm::uvec3> floor_faces;
 	create_floor(floor_vertices, floor_faces);
 
-	int cloth_x_size = 10;
-	int cloth_z_size = 10;
+	int cloth_x_size = 21;
+	int cloth_z_size = 21;
 	MassSpringSystem ms_system(cloth_x_size, cloth_z_size);
 	TicTocTimer *timer = new TicTocTimer;
 	*timer = tic();
 
+
+	Cloth cloth(cloth_x_size, cloth_z_size);
 
 
 	glm::vec4 light_position = glm::vec4(0.0f, 100.0f, 0.0f, 1.0f);
@@ -212,8 +215,21 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
 
+
+	RenderDataInput tri_cloth_pass_input;
+	tri_cloth_pass_input.assign(0, "vertex_position", cloth.vertices.data(), cloth.vertices.size(), 3, GL_FLOAT);
+	tri_cloth_pass_input.assign(1, "uv", cloth.cloth_uv_coords.data(), cloth.cloth_uv_coords.size(), 2, GL_FLOAT);
+	
+	RenderPass tri_cloth_pass(-1,
+			tri_cloth_pass_input,
+			{ cloth_vertex_shader, nullptr, cloth_fragment_shader },
+			{ std_model, std_view, std_proj, std_light },
+			{ "fragment_color" }
+			);
+
 	bool draw_floor = false;
-	bool draw_cloth = true;
+	bool draw_cloth = false;
+	bool draw_tri_cloth = true;
 	
 	toc(timer);
 	while (!glfwWindowShouldClose(window)) {
@@ -250,8 +266,10 @@ int main(int argc, char* argv[])
 
 		
 		float delta_t = (float) toc(timer) * gui.getTimeSpeed();
+
+		cloth.animate(delta_t);
 		
-		ms_system.animate(delta_t);
+		// ms_system.animate(delta_t);
 
 		// std::cout << "delta t: " << delta_t << std::endl;
 		// std::cout << "force: " << glm::to_string(ms_system.nodes_[38].force) << std::endl;
@@ -279,6 +297,17 @@ int main(int argc, char* argv[])
 			CHECK_GL_ERROR(glDrawElements(GL_LINES,
 			                              ms_system.line_indices.size() * 2,
 			                              GL_UNSIGNED_INT, 0));
+		}
+
+		if (draw_tri_cloth) {
+			glDisable(GL_CULL_FACE);
+			tri_cloth_pass.updateVBO(0, cloth.vertices.data(), cloth.vertices.size());
+			tri_cloth_pass.updateVBO(1, cloth.cloth_uv_coords.data(), cloth.cloth_uv_coords.size());
+			tri_cloth_pass.setup();
+
+			CHECK_GL_ERROR(glDrawArrays(GL_TRIANGLES,
+										0,
+		                              	cloth.vertices.size()));
 		}
 
 
