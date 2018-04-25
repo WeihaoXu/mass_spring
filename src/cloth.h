@@ -40,7 +40,7 @@ struct Triangle {
 };
 
 struct Spring {
-	Spring(Particle* p1, Particle* p2);
+	Spring(Particle* p1, Particle* p2, float k, float damper);
 	~Spring();
 
 	std::vector<Particle*> particles_;	// two particles
@@ -50,6 +50,8 @@ struct Spring {
 	Particle* p2_;
 	Spring* bend_spring_ = nullptr;
 	float init_length_;
+	float k_;
+	float damper_;
 };
 
 class Cloth {
@@ -85,8 +87,15 @@ private:
 	int x_size_, z_size_;
 
 	const float grid_width_ = 10.0;
-	const float damper_ = 0.1;
+
 	const float struct_k_ = 1.0;
+	const float struct_damper_ = 0.1;
+
+	const float bend_k_ = 1.0;
+	const float bend_damper_ = 0.1;
+	
+
+
 	const float bend_sheer_k = 1.0;
 	const float particle_mass_ = 0.1;
 	const float init_height_ = 0.0;

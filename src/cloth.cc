@@ -14,8 +14,8 @@ Particle::~Particle() {
 
 }
 
-Spring::Spring(Particle* p1, Particle* p2):
-			p1_(p1), p2_(p2)
+Spring::Spring(Particle* p1, Particle* p2, float k, float damper):
+			p1_(p1), p2_(p2), k_(k), damper_(damper_)
 {
 	init_length_ = glm::length(p1_->position_ - p2_->position_);
 }
@@ -83,14 +83,14 @@ Cloth::Cloth(int x_size, int z_size):
 		}
 	}
 
-	std::map<Particle*, std::map<Particle*, Spring*>> springMap;
 	// create structural springs
+	std::map<Particle*, std::map<Particle*, Spring*>> springMap;
 	for(Triangle* triangle : triangles_) {
 		for(int idx = 0; idx < 3; idx++) {
 			Particle* p1 = triangle->particles_[idx];
 			Particle* p2 = triangle->particles_[(idx + 1) % 3];
 			if(springMap[p1][p2] == nullptr && springMap[p2][p1] == nullptr) {
-				Spring* s = new Spring(p1, p2);	// problem: how find bending spring?
+				Spring* s = new Spring(p1, p2, struct_k_, struct_damper_);	// problem: how find bending spring?
 				s->triangles_.push_back(triangle);
 				p1->springs_.push_back(s);
 				p2->springs_.push_back(s);
@@ -168,16 +168,14 @@ Cloth::Cloth(int x_size, int z_size):
 		}
 		if(gridCoordValid(bend_x1, bend_z1) && gridCoordValid(bend_x2, bend_z2)) {
 			Spring* bend_spring = new Spring(particles_[getParticleIdx(bend_x1, bend_z1)], 
-										particles_[getParticleIdx(bend_x2, bend_z2)]);
+										particles_[getParticleIdx(bend_x2, bend_z2)],
+										bend_k_, bend_damper_);
 			spring->bend_spring_ = bend_spring;
 		}	
 	}
 
 
-	
-
-
-
+	// update cache vertices
 	refreshCache();
 
 }
@@ -223,6 +221,21 @@ void Cloth::refreshCache() {
 }
 
 void Cloth::animate(float delta_t) {
+	for(Spring* struct_s : springs_) {
+		// Compute force
+		// If force exceed limit. spring break
+		if(struct_s->bend_spring_) {
+			// Compute force
+		}
+
+		// add force to particles
+	}
+
+	for(Particle* particle : particles_) {
+		// Update velocity and positions
+	}
+
+
 	refreshCache();
 }
 
