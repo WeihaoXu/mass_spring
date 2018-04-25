@@ -27,10 +27,6 @@ GUI::~GUI()
 {
 }
 
-void GUI::assignMassSpringSystem(MassSpringSystem* system) 
-{
-	ms_system_ = system;
-}
 
 void GUI::keyCallback(int key, int scancode, int action, int mods)
 {

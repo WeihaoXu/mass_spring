@@ -6,7 +6,6 @@
 #include "render_pass.h"
 #include "config.h"
 #include "gui.h"
-#include "mass_spring.h"
 #include "tictoc.h"
 
 #include "cloth.h"
@@ -110,12 +109,10 @@ int main(int argc, char* argv[])
 
 	int cloth_x_size = 10;
 	int cloth_z_size = 10;
-	MassSpringSystem ms_system(cloth_x_size, cloth_z_size);
-	TicTocTimer *timer = new TicTocTimer;
-	*timer = tic();
-
 
 	Cloth cloth(cloth_x_size, cloth_z_size);
+	TicTocTimer *timer = new TicTocTimer;
+	*timer = tic();
 
 
 	glm::vec4 light_position = glm::vec4(0.0f, 100.0f, 0.0f, 1.0f);
@@ -210,19 +207,11 @@ int main(int argc, char* argv[])
 	//        Otherwise, do whatever you like here
 
 
-	// for(int i = 0; i < ms_system.node_positions.size(); i++) {
-	// 	std::cout << glm::to_string(ms_system.node_positions[i]) << ", ";
-	// }
-	// std::cout << std::endl;
-
-	// for(int i = 0; i < ms_system.line_indices.size(); i++) {
-	// 	std::cout << glm::to_string(ms_system.line_indices[i]) << ", ";
-	// }
-
+	
 	// Cloth render pass
 	RenderDataInput cloth_pass_input;
-	cloth_pass_input.assign(0, "vertex_position", ms_system.node_positions.data(), ms_system.node_positions.size(), 3, GL_FLOAT);
-	cloth_pass_input.assignIndex(ms_system.line_indices.data(), ms_system.line_indices.size(), 2);
+	cloth_pass_input.assign(0, "vertex_position", cloth.vertices.data(), cloth.vertices.size(), 3, GL_FLOAT);
+	cloth_pass_input.assign(1, "uv", cloth.cloth_uv_coords.data(), cloth.cloth_uv_coords.size(), 2, GL_FLOAT);
 	
 	RenderPass cloth_pass(-1,
 			cloth_pass_input,
@@ -231,30 +220,18 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
 
-
-	RenderDataInput tri_cloth_pass_input;
-	tri_cloth_pass_input.assign(0, "vertex_position", cloth.vertices.data(), cloth.vertices.size(), 3, GL_FLOAT);
-	tri_cloth_pass_input.assign(1, "uv", cloth.cloth_uv_coords.data(), cloth.cloth_uv_coords.size(), 2, GL_FLOAT);
+	// structural springs render pass 
+	RenderDataInput struct_spring_pass_input;
+	struct_spring_pass_input.assign(0, "vertex_position", cloth.struct_spring_vertices.data(), cloth.struct_spring_vertices.size(), 3, GL_FLOAT);
 	
-	RenderPass tri_cloth_pass(-1,
-			tri_cloth_pass_input,
-			{ cloth_vertex_shader, nullptr, cloth_fragment_shader },
-			{ std_model, std_view, std_proj, std_light },
-			{ "fragment_color" }
-			);
-
-
-	RenderDataInput spring_pass_input;
-	spring_pass_input.assign(0, "vertex_position", cloth.spring_vertices.data(), cloth.spring_vertices.size(), 3, GL_FLOAT);
-	
-	RenderPass spring_pass(-1,
-			spring_pass_input,
+	RenderPass struct_spring_pass(-1,
+			struct_spring_pass_input,
 			{ spring_vertex_shader, nullptr, spring_fragment_shader },
 			{ std_model, std_view, std_proj, std_light },
 			{ "fragment_color" }
 			);
 
-
+	// bending springs render pass
 	RenderDataInput bend_spring_pass_input;
 	bend_spring_pass_input.assign(0, "vertex_position", cloth.bend_spring_vertices.data(), cloth.bend_spring_vertices.size(), 3, GL_FLOAT);
 	
@@ -266,9 +243,8 @@ int main(int argc, char* argv[])
 			);
 
 	bool draw_floor = false;
-	bool draw_cloth = false;
-	bool draw_tri_cloth = true;
-	bool draw_spring = true;
+	bool draw_cloth = true;
+	bool draw_struct_spring = true;
 	bool draw_bend_spring = true;
 
 	toc(timer);
@@ -295,30 +271,19 @@ int main(int argc, char* argv[])
 		}
 
 		if (gui.toResetSystem()) {
-			ms_system.resetSystem();
+			// 
 			gui.clearResetFlag();
 		}
 
 		if (gui.toRandomDisturb()) {
-			ms_system.randomDisturb();
+			//
 			gui.clearDisturbFlag();
 		}
 
 		
 		float delta_t = (float) toc(timer) * gui.getTimeSpeed();
-
 		cloth.animate(delta_t);
 		
-		// ms_system.animate(delta_t);
-
-		// std::cout << "delta t: " << delta_t << std::endl;
-		// std::cout << "force: " << glm::to_string(ms_system.nodes_[38].force) << std::endl;
-		// std::cout << "velocity: " << glm::to_string(ms_system.nodes_[38].velocity) << std::endl;
-		// std::cout << "position: " << glm::to_string(ms_system.nodes_[38].position) << std::endl;
-		// std::cout << std::endl;
-
-
-
 		// Then draw floor.
 		if (draw_floor) {
 			floor_pass.setup();
@@ -329,34 +294,23 @@ int main(int argc, char* argv[])
 		}
 
 		if (draw_cloth) {
-			cloth_pass.updateVBO(0, ms_system.node_positions.data(), ms_system.node_positions.size());
-			cloth_pass_input.assignIndex(ms_system.line_indices.data(), ms_system.line_indices.size(), 2);
-			cloth_pass.updateIndexBuffer(ms_system.line_indices.data(), ms_system.line_indices.size());
-			cloth_pass.setup();
-			// Draw our triangles.
-			CHECK_GL_ERROR(glDrawElements(GL_LINES,
-			                              ms_system.line_indices.size() * 2,
-			                              GL_UNSIGNED_INT, 0));
-		}
-
-		if (draw_tri_cloth) {
 			glDisable(GL_CULL_FACE);
-			tri_cloth_pass.updateVBO(0, cloth.vertices.data(), cloth.vertices.size());
-			tri_cloth_pass.updateVBO(1, cloth.cloth_uv_coords.data(), cloth.cloth_uv_coords.size());
-			tri_cloth_pass.setup();
+			cloth_pass.updateVBO(0, cloth.vertices.data(), cloth.vertices.size());
+			cloth_pass.updateVBO(1, cloth.cloth_uv_coords.data(), cloth.cloth_uv_coords.size());
+			cloth_pass.setup();
 
 			CHECK_GL_ERROR(glDrawArrays(GL_TRIANGLES,
 										0,
 		                              	cloth.vertices.size()));
 		}
 
-		if (draw_spring) {
-			spring_pass.updateVBO(0, cloth.spring_vertices.data(), cloth.spring_vertices.size());
-			spring_pass.setup();
+		if (draw_struct_spring) {
+			struct_spring_pass.updateVBO(0, cloth.struct_spring_vertices.data(), cloth.struct_spring_vertices.size());
+			struct_spring_pass.setup();
 
 			CHECK_GL_ERROR(glDrawArrays(GL_LINES,
 										0,
-		                              	cloth.spring_vertices.size()));
+		                              	cloth.struct_spring_vertices.size()));
 		}
 
 		if (draw_bend_spring) {

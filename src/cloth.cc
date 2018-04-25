@@ -9,7 +9,7 @@ Particle::Particle(glm::vec3 init_position, float mass, glm::vec2 uv_coords, int
 {
 	resetForce();
 	setMovable();
-
+	// setFixed();
 }
 
 Particle::~Particle() {
@@ -46,7 +46,7 @@ Spring::~Spring()
 
 void Spring::computeForceQuantity() {
 	float curr_length = glm::length(p1_->position_ - p2_->position_);
-	force_quantity_ = (init_length_ - curr_length) * k_;
+	force_quantity_ = (init_length_ - curr_length) / init_length_ * k_;
 
 }
 
@@ -205,7 +205,7 @@ Cloth::Cloth(int x_size, int z_size):
 		if(gridCoordValid(bend_x1, bend_z1) && gridCoordValid(bend_x2, bend_z2)) {
 			Spring* bend_spring = new Spring(particles_[getParticleIdx(bend_x1, bend_z1)], 
 										particles_[getParticleIdx(bend_x2, bend_z2)],
-										bend_k_);
+										bend_sheer_k_);
 			spring->bend_spring_ = bend_spring;
 		}	
 	}
@@ -235,11 +235,11 @@ void Cloth::refreshCache() {
 
 
 	// spring linemesh
-	spring_vertices.clear();
+	struct_spring_vertices.clear();
 	bend_spring_vertices.clear();
 	for(Spring* s : springs_) {
-		spring_vertices.push_back(s->p1_->position_);
-		spring_vertices.push_back(s->p2_->position_);
+		struct_spring_vertices.push_back(s->p1_->position_);
+		struct_spring_vertices.push_back(s->p2_->position_);
 
 		if(s->bend_spring_) {
 			// std::cout << "push bend spring" << std::endl;

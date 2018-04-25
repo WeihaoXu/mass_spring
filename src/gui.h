@@ -5,7 +5,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
 
-#include "mass_spring.h"
 
 struct Mesh;
 
@@ -20,8 +19,6 @@ class GUI {
 public:
 	GUI(GLFWwindow*);
 	~GUI();
-	// void assignMesh(Mesh*);
-	void assignMassSpringSystem(MassSpringSystem* system);
 
 	void keyCallback(int key, int scancode, int action, int mods);
 	void mousePosCallback(double mouse_x, double mouse_y);
@@ -56,7 +53,6 @@ public:
 private:
 	GLFWwindow* window_;
 	// Mesh* mesh_;
-	MassSpringSystem* ms_system_;
 
 	int window_width_, window_height_;
 

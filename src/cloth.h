@@ -80,7 +80,7 @@ public:
 	std::vector<glm::vec2> cloth_uv_coords;
 	// std::vector<glm::uvec3> faces;
 
-	std::vector<glm::vec3> spring_vertices;	// used to linemesh springs. For debug use. 
+	std::vector<glm::vec3> struct_spring_vertices;	// used to linemesh springs. For debug use. 
 	std::vector<glm::vec3> bend_spring_vertices;
 
 private:
@@ -98,15 +98,13 @@ private:
 
 	int x_size_, z_size_;
 
-	const float grid_width_ = 10.0;
+	const float grid_width_ = 2.0;
 
-	const float struct_k_ = 1.0;
-	const float bend_k_ = 1.0;
-	
+	const float struct_k_ = 100.0;
+	const float bend_sheer_k_ = 10.0;
+
 	const float damper_ = 0.1;
 
-
-	const float bend_sheer_k = 1.0;
 	const float particle_mass_ = 0.1;
 	const float init_height_ = 0.0;
 
