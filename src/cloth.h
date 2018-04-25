@@ -4,6 +4,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include <iostream>
+#include <unordered_set>
 
 #define G 9.8
 #define PI 3.1416
@@ -76,8 +77,10 @@ private:
 
 
 	std::vector<Particle*> particles_;
-	std::vector<Triangle*> triangles_;
-	std::vector<Spring*> springs_;
+	std::unordered_set<Triangle*> triangles_;
+	std::unordered_set<Spring*> springs_;
+	// std::vector<Triangle*> triangles_;
+	// std::vector<Spring*> springs_;
 
 	int x_size_, z_size_;
 

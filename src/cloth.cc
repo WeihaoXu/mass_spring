@@ -53,14 +53,14 @@ Cloth::Cloth(int x_size, int z_size):
 					triangle->particles_.push_back(particles_[getParticleIdx(x, z)]);
 					triangle->particles_.push_back(particles_[getParticleIdx(x, z + 1)]);
 					triangle->particles_.push_back(particles_[getParticleIdx(x + 1, z)]);
-					triangles_.push_back(triangle);
+					triangles_.insert(triangle);
 				}
 				if(gridCoordValid(x, z + 1) && gridCoordValid(x - 1, z)) {
 					Triangle* triangle = new Triangle();
 					triangle->particles_.push_back(particles_[getParticleIdx(x, z)]);
 					triangle->particles_.push_back(particles_[getParticleIdx(x - 1, z)]);
 					triangle->particles_.push_back(particles_[getParticleIdx(x, z + 1)]);
-					triangles_.push_back(triangle);
+					triangles_.insert(triangle);
 				}
 			}
 			else {
@@ -69,7 +69,7 @@ Cloth::Cloth(int x_size, int z_size):
 					triangle->particles_.push_back(particles_[getParticleIdx(x, z)]);
 					triangle->particles_.push_back(particles_[getParticleIdx(x - 1, z + 1)]);
 					triangle->particles_.push_back(particles_[getParticleIdx(x, z + 1)]);
-					triangles_.push_back(triangle);
+					triangles_.insert(triangle);
 				}
 
 				if(gridCoordValid(x + 1, z + 1) && gridCoordValid(x, z + 1)) {
@@ -77,7 +77,7 @@ Cloth::Cloth(int x_size, int z_size):
 					triangle->particles_.push_back(particles_[getParticleIdx(x, z)]);
 					triangle->particles_.push_back(particles_[getParticleIdx(x, z + 1)]);
 					triangle->particles_.push_back(particles_[getParticleIdx(x + 1, z + 1)]);
-					triangles_.push_back(triangle);
+					triangles_.insert(triangle);
 				}
 			}
 		}
@@ -94,7 +94,7 @@ Cloth::Cloth(int x_size, int z_size):
 				s->triangles_.push_back(triangle);
 				p1->springs_.push_back(s);
 				p2->springs_.push_back(s);
-				springs_.push_back(s);
+				springs_.insert(s);
 				springMap[p1][p2] = s;
 				springMap[p2][p1] = s;
 
@@ -110,7 +110,7 @@ Cloth::Cloth(int x_size, int z_size):
 	for(Spring* spring : springs_) {
 		Particle* p1;
 		Particle* p2;
-		if(spring->p1_->grid_z_ < spring->p2_->grid_z_) {
+		if(spring->p1_->grid_x_ < spring->p2_->grid_x_) {
 			p1 = spring->p1_;
 			p2 = spring->p2_;
 		}
@@ -120,7 +120,7 @@ Cloth::Cloth(int x_size, int z_size):
 		}
 
 		// create bending springs
-		int bend_x1, bend_z1, bend_x2, bend_z2;
+		int bend_x1 = -1, bend_z1 = -1, bend_x2 = -1, bend_z2 = -1;
 
 		if(p1->grid_x_ % 2 == 0) {
 			if(p1->grid_x_ == p2->grid_x_) {
@@ -156,7 +156,7 @@ Cloth::Cloth(int x_size, int z_size):
 				bend_x1 = p1->grid_x_;
 				bend_z1 = p1->grid_z_ - 1;
 				bend_x2 = p2->grid_x_;
-				bend_z2 = p2->grid_x_ + 1;
+				bend_z2 = p2->grid_z_ + 1;
 			}
 			else {
 				bend_x1 = p1->grid_x_;
@@ -177,58 +177,6 @@ Cloth::Cloth(int x_size, int z_size):
 	
 
 
-	// std::cout << "triangle number of spring: " << std::endl;
-	// for(Spring* spring : springs_) {
-	// 	std::cout << spring->triangles_.size() << ", ";
-	// }
-	// std::cout << std::endl;
-
-	
-	// std::cout << "spring per particle: " << std::endl;
-	// for(Particle* particle : particles_) {
-	// 	std::cout << particle->springs_.size() << ", ";
-	// }
-	// std::cout << std::endl;
-	
-
-	// // structure springs
-	// for(int x = 0; x < x_size_; x++) {
-	// 	if(x % 2 == 0) {
-	// 		for(int z = 0; z < z_size_; z++) {
-	// 			if(gridCoordValid(x + 1, z - 1)) {
-	// 				Spring* s = new Spring(particles_[getParticleIdx(x + 1, z - 1)], particles_[getParticleIdx(x, z)]);
-	// 				springs_.push_back(s);
-	// 				particles_[getParticleIdx(x + 1, z - 1)]->springs_.push_back(s);
-	// 			}
-	// 			if(gridCoordValid(x + 1, z)) {
-	// 				Spring* s = new Spring(particles_[getParticleIdx(x + 1, z)], particles_[getParticleIdx(x, z)]);
-	// 				springs_.push_back(s);
-	// 				particles_[getParticleIdx(x + 1, z)]->springs_.push_back(s);
-	// 			}
-	// 			if(gridCoordValid(x, z + 1)) {
-	// 				Spring* s = new Spring(particles_[getParticleIdx(x, z + 1)], particles_[getParticleIdx(x, z)]);
-	// 				springs_.push_back(s);
-	// 				particles_[getParticleIdx(x, z + 1)]->springs_.push_back(s);
-	// 			}
-	// 		}
-	// 	}
-	// 	else {
-	// 		for(int z = 0; z < z_size_; z++) {
-	// 			if(gridCoordValid(x + 1, z - 1)) {
-	// 				Spring* s = new Spring();
-	// 				springs_.push_back(s);
-	// 			}
-	// 			if(gridCoordValid()) {
-	// 				Spring* s = new Spring();
-	// 				springs_.push_back(s);
-	// 			}
-	// 			if(gridCoordValid()) {
-	// 				Spring* s = new Spring();
-	// 				springs_.push_back(s);
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	refreshCache();
 
