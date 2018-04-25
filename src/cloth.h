@@ -14,12 +14,12 @@
 struct Spring;
 struct Triangle;
 
-
+// Nodes in the spring.
 struct Particle {
 	Particle(glm::vec3 init_position, float mass, glm::vec2 uv_coords, int grid_x, int grid_z);
 	~Particle();
 	
-	void resetForce();
+	void resetForce();	// clear all forces except for gravity.
 	void addForce(glm::vec3 f);
 	void setFixed();
 	void setMovable();
@@ -42,23 +42,24 @@ struct Particle {
 };
 
 struct Triangle {
-	std::vector<Particle*> particles_;
+	std::vector<Particle*> particles_;	// length == 3. Three particles.
 };
 
 struct Spring {
 
-	Spring(Particle* p1, Particle* p2, float k);
+	Spring(Particle* p1, Particle* p2, float k);	// k is the spring constant
 	~Spring();
 
-	void computeForceQuantity();
-	void applyForce();
+	void computeForceQuantity();	// compute the force quantity, and store it in force_quantity_
+	void applyForce();	// compute two force vectors, and apply them to two particles connected to the spring.
 
 	std::vector<Particle*> particles_;	// two particles
-	std::vector<Triangle*> triangles_;	// two triangles
+	std::vector<Triangle*> triangles_;	// a spring is neighbor to either 1 or 2 triangles.
 
 	Particle* p1_;
 	Particle* p2_;
-	Spring* bend_spring_ = nullptr;
+	Spring* bend_spring_ = nullptr;	// A bending spring (if there is one) related to this structural spring.
+									// If this spring itself is a bending spring, this attribute will simply be nullptr.
 	
 	float force_quantity_;
 	float init_length_;
@@ -71,31 +72,31 @@ class Cloth {
 public:
 	Cloth(int x_size, int z_size);
 	~Cloth();
-	void animate(float delta_t);
+	void animate(float delta_t);	// recalculate the forces, velocities and positions. Finally update cache
 
-
-	std::vector<glm::vec3> vertices;
-	std::vector<glm::vec2> cloth_uv_coords;
+	// The following vectors are cache for GPU rendering.
+	std::vector<glm::vec3> vertices;		// for rendering the cloth
+	std::vector<glm::vec2> cloth_uv_coords;	// for texture mapping the the future.
 	std::vector<glm::vec3> struct_spring_vertices;	// used to linemesh springs. For debug use. 
-	std::vector<glm::vec3> bend_spring_vertices;
+	std::vector<glm::vec3> bend_spring_vertices;	// used to linemesh springs. For debug use. 
 
 private:
 	int getParticleIdx(int x, int z);
-	bool gridCoordValid(int x, int z);
-	void refreshCache();
+	bool gridCoordValid(int x, int z);	
+	void refreshCache();	// update the cache for rendiering
 
 
 	std::vector<Particle*> particles_;
-	std::unordered_set<Triangle*> triangles_;
-	std::unordered_set<Spring*> springs_;
+	std::unordered_set<Triangle*> triangles_;	//stored in a hashset for constant time access, modify and delete
+	std::unordered_set<Spring*> springs_;		//stored in a hashset for constant time access, modify and delete
 
 	int x_size_, z_size_;
 	const float grid_width_ = 2.0;
-	const float struct_k_ = 100.0;
-	const float bend_sheer_k_ = 10.0;
+	const float struct_k_ = 100.0;	// spring constant of bending springs
+	const float bend_sheer_k_ = 10.0;	// spring constant of bending springs. (there bending springs also used as sheering springs)
 	const float damper_ = 0.1;
-	const float particle_mass_ = 0.1;
-	const float init_height_ = 0.0;
+	const float particle_mass_ = 0.1;	// init mass of every particle.
+	const float init_height_ = 0.0;		// init height of the cloth. (i.e. init z position of all particles)
 
 };
 
