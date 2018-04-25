@@ -14,8 +14,8 @@ Particle::~Particle() {
 
 }
 
-Spring::Spring(Particle* p1, Particle* p2, Spring* bend_spring):
-			p1_(p1), p2_(p2), bend_spring_(bend_spring_)
+Spring::Spring(Particle* p1, Particle* p2):
+			p1_(p1), p2_(p2)
 {
 	init_length_ = glm::length(p1_->position_ - p2_->position_);
 }
@@ -84,6 +84,7 @@ Cloth::Cloth(int x_size, int z_size):
 	}
 
 	std::map<Particle*, std::map<Particle*, Spring*>> springMap;
+	// create structural springs
 	for(Triangle* triangle : triangles_) {
 		for(int idx = 0; idx < 3; idx++) {
 			Particle* p1 = triangle->particles_[idx];
@@ -104,18 +105,90 @@ Cloth::Cloth(int x_size, int z_size):
 		}
 	}
 
-	std::cout << "triangle number of spring: " << std::endl;
+
+	// add bending springs
 	for(Spring* spring : springs_) {
-		std::cout << spring->triangles_.size() << ", ";
+		Particle* p1;
+		Particle* p2;
+		if(spring->p1_->grid_z_ < spring->p2_->grid_z_) {
+			p1 = spring->p1_;
+			p2 = spring->p2_;
+		}
+		else {
+			p1 = spring->p2_;
+			p2 = spring->p1_;
+		}
+
+		// create bending springs
+		int bend_x1, bend_z1, bend_x2, bend_z2;
+
+		if(p1->grid_x_ % 2 == 0) {
+			if(p1->grid_x_ == p2->grid_x_) {
+				bend_x1 = p1->grid_x_ - 1; 
+				bend_z1 = std::min(p1->grid_z_, p2->grid_z_);
+				bend_x2 = p1->grid_x_ + 1; 
+				bend_z2 = std::min(p1->grid_z_, p2->grid_z_);
+			}
+			else if(p1->grid_z_ == p2->grid_z_) {
+				bend_x1 = p1->grid_x_;
+				bend_z1 = p1->grid_z_ + 1;
+				bend_x2 = p2->grid_x_;
+				bend_z2 = p2->grid_z_ - 1;
+				
+			}
+			else {
+				bend_x1 = p1->grid_x_;
+				bend_z1 = p1->grid_z_ - 1;
+				bend_x2 = p2->grid_x_;
+				bend_z2 = p2->grid_z_ + 1;
+				
+			}
+		}
+		else {
+			if(p1->grid_x_ == p2->grid_x_) {
+				bend_x1 = p1->grid_x_ - 1;
+				bend_z1 = std::max(p1->grid_z_, p2->grid_z_);
+				bend_x2 = p1->grid_x_ + 1;
+				bend_z2 = std::max(p1->grid_z_, p2->grid_z_);
+				
+			}
+			else if(p1->grid_z_ == p2->grid_z_) {
+				bend_x1 = p1->grid_x_;
+				bend_z1 = p1->grid_z_ - 1;
+				bend_x2 = p2->grid_x_;
+				bend_z2 = p2->grid_x_ + 1;
+			}
+			else {
+				bend_x1 = p1->grid_x_;
+				bend_z1 = p1->grid_z_ + 1;
+				bend_x2 = p2->grid_x_;
+				bend_z2 = p2->grid_z_ - 1;
+			}
+
+		}
+		if(gridCoordValid(bend_x1, bend_z1) && gridCoordValid(bend_x2, bend_z2)) {
+			Spring* bend_spring = new Spring(particles_[getParticleIdx(bend_x1, bend_z1)], 
+										particles_[getParticleIdx(bend_x2, bend_z2)]);
+			spring->bend_spring_ = bend_spring;
+		}	
 	}
-	std::cout << std::endl;
+
 
 	
-	std::cout << "spring per particle: " << std::endl;
-	for(Particle* particle : particles_) {
-		std::cout << particle->springs_.size() << ", ";
-	}
-	std::cout << std::endl;
+
+
+	// std::cout << "triangle number of spring: " << std::endl;
+	// for(Spring* spring : springs_) {
+	// 	std::cout << spring->triangles_.size() << ", ";
+	// }
+	// std::cout << std::endl;
+
+	
+	// std::cout << "spring per particle: " << std::endl;
+	// for(Particle* particle : particles_) {
+	// 	std::cout << particle->springs_.size() << ", ";
+	// }
+	// std::cout << std::endl;
 	
 
 	// // structure springs
@@ -181,10 +254,20 @@ void Cloth::refreshCache() {
 
 	// spring linemesh
 	spring_vertices.clear();
+	bend_spring_vertices.clear();
 	for(Spring* s : springs_) {
 		spring_vertices.push_back(s->p1_->position_);
 		spring_vertices.push_back(s->p2_->position_);
+
+		if(s->bend_spring_) {
+			// std::cout << "push bend spring" << std::endl;
+		
+			bend_spring_vertices.push_back(s->bend_spring_->p1_->position_);
+			bend_spring_vertices.push_back(s->bend_spring_->p2_->position_);
+
+		}
 	}
+	// std::cout << "end push bend spring" << std::endl;
 
 
 

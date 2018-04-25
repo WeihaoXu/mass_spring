@@ -39,7 +39,7 @@ struct Triangle {
 };
 
 struct Spring {
-	Spring(Particle* p1, Particle* p2, Spring* bend_spring = nullptr);
+	Spring(Particle* p1, Particle* p2);
 	~Spring();
 
 	std::vector<Particle*> particles_;	// two particles
@@ -47,7 +47,7 @@ struct Spring {
 
 	Particle* p1_;
 	Particle* p2_;
-	Spring* bend_spring_;
+	Spring* bend_spring_ = nullptr;
 	float init_length_;
 };
 
@@ -66,7 +66,7 @@ public:
 	// std::vector<glm::uvec3> faces;
 
 	std::vector<glm::vec3> spring_vertices;	// used to linemesh springs. For debug use. 
-
+	std::vector<glm::vec3> bend_spring_vertices;
 
 private:
 	int getParticleIdx(int x, int z);
