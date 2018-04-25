@@ -7,6 +7,8 @@ Particle::Particle(glm::vec3 init_position, float mass, glm::vec2 uv_coords, int
 			init_position_(init_position), position_(init_position), mass_(mass), uv_coords_(uv_coords),
 			grid_x_(grid_x), grid_z_(grid_z)
 {
+	resetForce();
+	setMovable();
 
 }
 
@@ -14,8 +16,25 @@ Particle::~Particle() {
 
 }
 
-Spring::Spring(Particle* p1, Particle* p2, float k, float damper):
-			p1_(p1), p2_(p2), k_(k), damper_(damper_)
+void Particle::resetForce() {
+	force_ = glm::vec3(0.0f, - 1.0 * mass_ * G, 0.0f);
+}
+
+
+void Particle::addForce(glm::vec3 f) {
+	force_ += f;
+}
+
+void Particle::setFixed() {
+	fixed_ = true;
+}
+
+void Particle::setMovable() {
+	fixed_ = false;
+}
+
+Spring::Spring(Particle* p1, Particle* p2, float k):
+			p1_(p1), p2_(p2), k_(k)
 {
 	init_length_ = glm::length(p1_->position_ - p2_->position_);
 }
@@ -23,6 +42,19 @@ Spring::Spring(Particle* p1, Particle* p2, float k, float damper):
 
 Spring::~Spring() 
 {
+}
+
+void Spring::computeForceQuantity() {
+	float curr_length = glm::length(p1_->position_ - p2_->position_);
+	force_quantity_ = (init_length_ - curr_length) * k_;
+
+}
+
+void Spring::applyForce() {
+	glm::vec3 force1 = glm::normalize(p1_->position_ - p2_->position_) * force_quantity_;
+	glm::vec3 force2 = -1.0f * force1;
+	p1_->addForce(force1);
+	p2_->addForce(force2);
 }
 
 
@@ -42,6 +74,10 @@ Cloth::Cloth(int x_size, int z_size):
 		}
 	}
 	// std::cout << "cloth built, particle number: " << particles_.size() << std::endl;
+
+	// set two anchor nodes. For experiments.
+	particles_[getParticleIdx(0, 0)]->setFixed();
+	particles_[getParticleIdx(0, z_size_ - 1)]->setFixed();
 
 	// create triangles
 	for(int x = 0; x < x_size_; x++) {
@@ -90,7 +126,7 @@ Cloth::Cloth(int x_size, int z_size):
 			Particle* p1 = triangle->particles_[idx];
 			Particle* p2 = triangle->particles_[(idx + 1) % 3];
 			if(springMap[p1][p2] == nullptr && springMap[p2][p1] == nullptr) {
-				Spring* s = new Spring(p1, p2, struct_k_, struct_damper_);	// problem: how find bending spring?
+				Spring* s = new Spring(p1, p2, struct_k_);	// problem: how find bending spring?
 				s->triangles_.push_back(triangle);
 				p1->springs_.push_back(s);
 				p2->springs_.push_back(s);
@@ -169,7 +205,7 @@ Cloth::Cloth(int x_size, int z_size):
 		if(gridCoordValid(bend_x1, bend_z1) && gridCoordValid(bend_x2, bend_z2)) {
 			Spring* bend_spring = new Spring(particles_[getParticleIdx(bend_x1, bend_z1)], 
 										particles_[getParticleIdx(bend_x2, bend_z2)],
-										bend_k_, bend_damper_);
+										bend_k_);
 			spring->bend_spring_ = bend_spring;
 		}	
 	}
@@ -221,18 +257,34 @@ void Cloth::refreshCache() {
 }
 
 void Cloth::animate(float delta_t) {
-	for(Spring* struct_s : springs_) {
-		// Compute force
-		// If force exceed limit. spring break
-		if(struct_s->bend_spring_) {
-			// Compute force
-		}
-
-		// add force to particles
+	// clear all forces except for gravity
+	for(Particle* particle : particles_) {
+		particle->resetForce();
 	}
 
+	// update forces
+	for(Spring* struct_s : springs_) {
+		struct_s->computeForceQuantity();
+		// TODO: if force quantity exceeds limit, break the spring
+		struct_s->applyForce();
+		
+		if(struct_s->bend_spring_) {
+			struct_s->bend_spring_->computeForceQuantity();
+			struct_s->bend_spring_->applyForce();
+
+		}
+	}
+
+	// update particle velocity and positions
 	for(Particle* particle : particles_) {
 		// Update velocity and positions
+		if(!particle->fixed_) {
+			glm::vec3 damper_force = -damper_ * particle->velocity_;
+			glm::vec3 acceleration = (particle->force_ + damper_force) / particle->mass_;
+			particle->velocity_ += acceleration * delta_t;
+			particle->position_ += particle->velocity_ * delta_t;
+
+		}
 	}
 
 

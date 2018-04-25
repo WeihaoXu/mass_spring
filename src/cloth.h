@@ -18,6 +18,12 @@ struct Particle {
 	Particle(glm::vec3 init_position, float mass, glm::vec2 uv_coords, int grid_x, int grid_z);
 	~Particle();
 	
+	void resetForce();
+	void addForce(glm::vec3 f);
+
+	void setFixed();
+	void setMovable();
+
 	glm::vec3 position_;
 	glm::vec3 init_position_;
 	glm::vec3 force_;
@@ -30,6 +36,7 @@ struct Particle {
 
 	std::vector<Spring*> springs_;
 	float mass_;
+	bool fixed_;
 
 };
 
@@ -40,18 +47,23 @@ struct Triangle {
 };
 
 struct Spring {
-	Spring(Particle* p1, Particle* p2, float k, float damper);
+	Spring(Particle* p1, Particle* p2, float k);
 	~Spring();
+
+	void computeForceQuantity();
+	void applyForce();
 
 	std::vector<Particle*> particles_;	// two particles
 	std::vector<Triangle*> triangles_;	// two triangles
 
 	Particle* p1_;
 	Particle* p2_;
+	
+	float force_quantity_;
+
 	Spring* bend_spring_ = nullptr;
 	float init_length_;
 	float k_;
-	float damper_;
 };
 
 class Cloth {
@@ -89,11 +101,9 @@ private:
 	const float grid_width_ = 10.0;
 
 	const float struct_k_ = 1.0;
-	const float struct_damper_ = 0.1;
-
 	const float bend_k_ = 1.0;
-	const float bend_damper_ = 0.1;
 	
+	const float damper_ = 0.1;
 
 
 	const float bend_sheer_k = 1.0;
