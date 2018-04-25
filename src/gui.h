@@ -5,7 +5,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
 
-#include "mass_spring.h"
 
 struct Mesh;
 
@@ -20,8 +19,6 @@ class GUI {
 public:
 	GUI(GLFWwindow*);
 	~GUI();
-	// void assignMesh(Mesh*);
-	void assignMassSpringSystem(MassSpringSystem* system);
 
 	void keyCallback(int key, int scancode, int action, int mods);
 	void mousePosCallback(double mouse_x, double mouse_y);
@@ -44,6 +41,8 @@ public:
 	bool toRandomDisturb() {return to_random_disturb_;}
 	void clearDisturbFlag() {to_random_disturb_ = false;}
 
+	float getTimeSpeed() {return time_speed_;}
+
 	const float* getLightPositionPtr() const { return &light_position_[0]; }
 	
 	// int getCurrentBone() const { return current_bone_; }
@@ -54,7 +53,6 @@ public:
 private:
 	GLFWwindow* window_;
 	// Mesh* mesh_;
-	MassSpringSystem* ms_system_;
 
 	int window_width_, window_height_;
 
@@ -75,9 +73,11 @@ private:
 	float zoom_speed_ = 0.1f * 3;
 	float aspect_;
 
+	float time_speed_ = 1.0;
+
 	glm::vec3 eye_ = glm::vec3(0.0f, 0.1f, camera_distance_);
 	glm::vec3 up_ = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::vec3 look_ = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 look_ = glm::vec3(-1.0f, 0.0f, 0.0f);
 	glm::vec3 tangent_ = glm::cross(look_, up_);
 	glm::vec3 center_ = eye_ - camera_distance_ * look_;
 	glm::mat3 orientation_ = glm::mat3(tangent_, up_, look_);

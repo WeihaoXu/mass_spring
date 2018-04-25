@@ -3,63 +3,103 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include <iostream>
+#include <unordered_set>
+
 
 #define G 9.8
 #define PI 3.1416
 
-using namespace std;
+
+struct Spring;
+struct Triangle;
 
 
 struct Particle {
+	Particle(glm::vec3 init_position, float mass, glm::vec2 uv_coords, int grid_x, int grid_z);
+	~Particle();
 	
-	glm::vec3 position;
-	glm::vec3 force;
-	glm::vec3 velocity;
+	void resetForce();
+	void addForce(glm::vec3 f);
+	void setFixed();
+	void setMovable();
 
-	glm::vec2 uv_coords;
-	vector<Spring*> springs;
-	float mass;
+	glm::vec3 position_;
+	glm::vec3 init_position_;
+	glm::vec3 force_;
+	glm::vec3 velocity_;
+
+	glm::vec2 uv_coords_;
+	glm::vec2 grid_coords;
+
+	std::vector<Spring*> springs_;
+
+	int grid_x_, grid_z_;
+	float mass_;
+	bool fixed_;
+
 
 };
 
 struct Triangle {
-	// vector<Spring*> springs;
-	vector<Particle*> particles;
-
+	std::vector<Particle*> particles_;
 };
 
 struct Spring {
 
-	Particle* p1;
-	Particle* p2;
+	Spring(Particle* p1, Particle* p2, float k);
+	~Spring();
 
-	Particle* bend_p1;
-	Particle* bend_p2;
+	void computeForceQuantity();
+	void applyForce();
 
-	float init_length;
+	std::vector<Particle*> particles_;	// two particles
+	std::vector<Triangle*> triangles_;	// two triangles
+
+	Particle* p1_;
+	Particle* p2_;
+	Spring* bend_spring_ = nullptr;
+	
+	float force_quantity_;
+	float init_length_;
+	float k_;
+
 };
 
 class Cloth {
 
 public:
-	vector<glm::vec3> vertices;
-	vector<glm::uvec3> faces;
+	Cloth(int x_size, int z_size);
+	~Cloth();
+	void animate(float delta_t);
 
+
+	std::vector<glm::vec3> vertices;
+	std::vector<glm::vec2> cloth_uv_coords;
+	std::vector<glm::vec3> struct_spring_vertices;	// used to linemesh springs. For debug use. 
+	std::vector<glm::vec3> bend_spring_vertices;
 
 private:
-	vector<Particle*> particles_;
-	vector<Triangle*> triangles_;
-	vector<Spring*> springs_;
-
-	const float damper_;
-	const float k_;
-
-	const float partile_mass_;
+	int getParticleIdx(int x, int z);
+	bool gridCoordValid(int x, int z);
+	void refreshCache();
 
 
+	std::vector<Particle*> particles_;
+	std::unordered_set<Triangle*> triangles_;
+	std::unordered_set<Spring*> springs_;
 
+	int x_size_, z_size_;
+	const float grid_width_ = 2.0;
+	const float struct_k_ = 100.0;
+	const float bend_sheer_k_ = 10.0;
+	const float damper_ = 0.1;
+	const float particle_mass_ = 0.1;
+	const float init_height_ = 0.0;
 
 };
 
 
-#endif
+
+#endif	// end define CLOTH_H
+
