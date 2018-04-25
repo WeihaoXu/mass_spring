@@ -14,7 +14,7 @@ struct Triangle;
 
 
 struct Particle {
-	Particle(glm::vec3 init_position, float mass, glm::vec2 uv_coords);
+	Particle(glm::vec3 init_position, float mass, glm::vec2 uv_coords, int grid_x, int grid_z);
 	~Particle();
 	
 	glm::vec3 position_;
@@ -23,6 +23,10 @@ struct Particle {
 	glm::vec3 velocity_;
 
 	glm::vec2 uv_coords_;
+	glm::vec2 grid_coords;
+
+	int grid_x_, grid_z_;
+
 	std::vector<Spring*> springs_;
 	float mass_;
 
@@ -35,10 +39,12 @@ struct Triangle {
 };
 
 struct Spring {
-	Spring(Particle* p1, Particle* p2, Spring* bend_spring);
+	Spring(Particle* p1, Particle* p2, Spring* bend_spring = nullptr);
 	~Spring();
 
-	std::vector<Particle*> particles_;
+	std::vector<Particle*> particles_;	// two particles
+	std::vector<Triangle*> triangles_;	// two triangles
+
 	Particle* p1_;
 	Particle* p2_;
 	Spring* bend_spring_;
@@ -58,6 +64,8 @@ public:
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec2> cloth_uv_coords;
 	// std::vector<glm::uvec3> faces;
+
+	std::vector<glm::vec3> spring_vertices;	// used to linemesh springs. For debug use. 
 
 
 private:

@@ -1,9 +1,11 @@
 #include "cloth.h"
 #include <glm/gtx/string_cast.hpp>
+#include <map>
 
 
-Particle::Particle(glm::vec3 init_position, float mass, glm::vec2 uv_coords):
-			init_position_(init_position), position_(init_position), mass_(mass), uv_coords_(uv_coords)
+Particle::Particle(glm::vec3 init_position, float mass, glm::vec2 uv_coords, int grid_x, int grid_z):
+			init_position_(init_position), position_(init_position), mass_(mass), uv_coords_(uv_coords),
+			grid_x_(grid_x), grid_z_(grid_z)
 {
 
 }
@@ -15,6 +17,7 @@ Particle::~Particle() {
 Spring::Spring(Particle* p1, Particle* p2, Spring* bend_spring):
 			p1_(p1), p2_(p2), bend_spring_(bend_spring_)
 {
+	init_length_ = glm::length(p1_->position_ - p2_->position_);
 }
 
 
@@ -33,7 +36,7 @@ Cloth::Cloth(int x_size, int z_size):
 			glm::vec3 position(x * grid_width_, init_height_, z * grid_width_ + z_offset);
 			glm::vec2 uv_coords(1.0 * x / (x_size_ - 1), 1.0 * z / (z_size_ - 1));
 			// std::cout << "uv = " << glm::to_string(uv_coords) << std::endl;
-			Particle* particle = new Particle(position, particle_mass_, uv_coords);
+			Particle* particle = new Particle(position, particle_mass_, uv_coords, x, z);
 			particles_.push_back(particle);
 			// std::cout << "particles " << glm::to_string(particle->position_) << std::endl;
 		}
@@ -80,22 +83,59 @@ Cloth::Cloth(int x_size, int z_size):
 		}
 	}
 
-	// structure springs
+	std::map<Particle*, std::map<Particle*, Spring*>> springMap;
+	for(Triangle* triangle : triangles_) {
+		for(int idx = 0; idx < 3; idx++) {
+			Particle* p1 = triangle->particles_[idx];
+			Particle* p2 = triangle->particles_[(idx + 1) % 3];
+			if(springMap[p1][p2] == nullptr && springMap[p2][p1] == nullptr) {
+				Spring* s = new Spring(p1, p2);	// problem: how find bending spring?
+				s->triangles_.push_back(triangle);
+				p1->springs_.push_back(s);
+				p2->springs_.push_back(s);
+				springs_.push_back(s);
+				springMap[p1][p2] = s;
+				springMap[p2][p1] = s;
 
+			}
+			else {
+				springMap[p1][p2]->triangles_.push_back(triangle);
+			}
+		}
+	}
+
+	std::cout << "triangle number of spring: " << std::endl;
+	for(Spring* spring : springs_) {
+		std::cout << spring->triangles_.size() << ", ";
+	}
+	std::cout << std::endl;
+
+	
+	std::cout << "spring per particle: " << std::endl;
+	for(Particle* particle : particles_) {
+		std::cout << particle->springs_.size() << ", ";
+	}
+	std::cout << std::endl;
+	
+
+	// // structure springs
 	// for(int x = 0; x < x_size_; x++) {
 	// 	if(x % 2 == 0) {
 	// 		for(int z = 0; z < z_size_; z++) {
 	// 			if(gridCoordValid(x + 1, z - 1)) {
-	// 				Spring* s = new Spring();
+	// 				Spring* s = new Spring(particles_[getParticleIdx(x + 1, z - 1)], particles_[getParticleIdx(x, z)]);
 	// 				springs_.push_back(s);
+	// 				particles_[getParticleIdx(x + 1, z - 1)]->springs_.push_back(s);
 	// 			}
-	// 			if(gridCoordValid()) {
-	// 				Spring* s = new Spring();
+	// 			if(gridCoordValid(x + 1, z)) {
+	// 				Spring* s = new Spring(particles_[getParticleIdx(x + 1, z)], particles_[getParticleIdx(x, z)]);
 	// 				springs_.push_back(s);
+	// 				particles_[getParticleIdx(x + 1, z)]->springs_.push_back(s);
 	// 			}
-	// 			if(gridCoordValid()) {
-	// 				Spring* s = new Spring();
+	// 			if(gridCoordValid(x, z + 1)) {
+	// 				Spring* s = new Spring(particles_[getParticleIdx(x, z + 1)], particles_[getParticleIdx(x, z)]);
 	// 				springs_.push_back(s);
+	// 				particles_[getParticleIdx(x, z + 1)]->springs_.push_back(s);
 	// 			}
 	// 		}
 	// 	}
@@ -127,6 +167,7 @@ Cloth::~Cloth() {
 }
 
 void Cloth::refreshCache() {
+	// vertices and uv_coords
 	vertices.clear();
 	cloth_uv_coords.clear();
 	for(Triangle* triangle : triangles_) {
@@ -136,6 +177,16 @@ void Cloth::refreshCache() {
 			cloth_uv_coords.push_back(p->uv_coords_);
 		}
 	}
+
+
+	// spring linemesh
+	spring_vertices.clear();
+	for(Spring* s : springs_) {
+		spring_vertices.push_back(s->p1_->position_);
+		spring_vertices.push_back(s->p2_->position_);
+	}
+
+
 
 
 }

@@ -51,6 +51,15 @@ const char* cloth_fragment_shader =
 #include "shaders/cloth.frag"
 ;
 
+const char* spring_vertex_shader =
+#include "shaders/spring.vert"
+;
+
+const char* spring_fragment_shader =
+#include "shaders/spring.frag"
+;
+
+
 // FIXME: Add more shaders here.
 
 void ErrorCallback(int error, const char* description) {
@@ -92,8 +101,8 @@ int main(int argc, char* argv[])
 	std::vector<glm::uvec3> floor_faces;
 	create_floor(floor_vertices, floor_faces);
 
-	int cloth_x_size = 21;
-	int cloth_z_size = 21;
+	int cloth_x_size = 3;
+	int cloth_z_size = 3;
 	MassSpringSystem ms_system(cloth_x_size, cloth_z_size);
 	TicTocTimer *timer = new TicTocTimer;
 	*timer = tic();
@@ -227,9 +236,21 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
 
+
+	RenderDataInput spring_pass_input;
+	spring_pass_input.assign(0, "vertex_position", cloth.spring_vertices.data(), cloth.spring_vertices.size(), 3, GL_FLOAT);
+	
+	RenderPass spring_pass(-1,
+			spring_pass_input,
+			{ spring_vertex_shader, nullptr, spring_fragment_shader },
+			{ std_model, std_view, std_proj, std_light },
+			{ "fragment_color" }
+			);
+
 	bool draw_floor = false;
 	bool draw_cloth = false;
 	bool draw_tri_cloth = true;
+	bool draw_spring = true;
 	
 	toc(timer);
 	while (!glfwWindowShouldClose(window)) {
@@ -308,6 +329,15 @@ int main(int argc, char* argv[])
 			CHECK_GL_ERROR(glDrawArrays(GL_TRIANGLES,
 										0,
 		                              	cloth.vertices.size()));
+		}
+
+		if (draw_spring) {
+			spring_pass.updateVBO(0, cloth.spring_vertices.data(), cloth.spring_vertices.size());
+			spring_pass.setup();
+
+			CHECK_GL_ERROR(glDrawArrays(GL_LINES,
+										0,
+		                              	cloth.spring_vertices.size()));
 		}
 
 
