@@ -64,6 +64,7 @@ struct Spring {
 	float force_quantity_;
 	float init_length_;
 	float k_;
+	float max_deform_rate_ = 0.1f;
 
 };
 
@@ -94,7 +95,7 @@ private:
 	const float grid_width_ = 2.0;
 	const float struct_k_ = 100.0;	// spring constant of bending springs
 	const float bend_sheer_k_ = 10.0;	// spring constant of bending springs. (there bending springs also used as sheering springs)
-	const float damper_ = 0.1;
+	const float damper_ = 0.06;
 	const float particle_mass_ = 0.1;	// init mass of every particle.
 	const float init_height_ = 0.0;		// init height of the cloth. (i.e. init z position of all particles)
 

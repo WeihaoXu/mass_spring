@@ -103,8 +103,8 @@ int main(int argc, char* argv[])
 
 	
 
-	int cloth_x_size = 10;
-	int cloth_z_size = 10;
+	int cloth_x_size = 11;
+	int cloth_z_size = 11;
 
 	Cloth cloth(cloth_x_size, cloth_z_size);
 	TicTocTimer *timer = new TicTocTimer;
@@ -263,6 +263,8 @@ int main(int argc, char* argv[])
 
 		
 		float delta_t = (float) toc(timer) * gui.getTimeSpeed();
+		delta_t *= 1.0;
+		std::cout << "delta_t = " << delta_t << std::endl;
 		cloth.animate(delta_t);
 		
 

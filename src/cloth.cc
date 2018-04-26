@@ -46,7 +46,11 @@ Spring::~Spring()
 
 void Spring::computeForceQuantity() {
 	float curr_length = glm::length(p1_->position_ - p2_->position_);
-	force_quantity_ = (init_length_ - curr_length) / init_length_ * k_;
+	float deform_rate = (init_length_ - curr_length) / init_length_;
+	if(fabs(deform_rate) > max_deform_rate_) {	// constrains. Anti-superelastic.
+		deform_rate = deform_rate * (fabs(deform_rate) / max_deform_rate_);
+	}
+	force_quantity_ = deform_rate * k_;
 
 }
 
