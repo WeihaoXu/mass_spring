@@ -93,6 +93,7 @@ public:
 
 	glm::vec3 pick_ray_start = glm::vec3(0.0f);
 	glm::vec3 pick_ray_end = glm::vec3(0.0f);
+	bool to_tear = false;
 
 
 private:

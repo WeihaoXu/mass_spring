@@ -108,6 +108,13 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 		cloth_->pick_ray_start = eye_;
 		cloth_->pick_ray_end = pick_ray_end;
 	}
+
+	if(drag_state_ && current_button_ == GLFW_MOUSE_BUTTON_LEFT) {
+		cloth_->to_tear = true;
+	}
+	else {
+		cloth_->to_tear = false;
+	}
 	
 }
 

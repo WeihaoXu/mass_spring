@@ -439,7 +439,10 @@ void Cloth::animate(float delta_t) {
 	// std::cout << "pick ray start: " << glm::to_string(pick_ray_start) << std::endl;
 	if(picked_spring) {
 		std::cout << "spring selected" << std::endl;
-		// tear(picked_spring);
+		if(to_tear) {
+			tear(picked_spring);
+		}
+		
 	}
 	else {
 		std::cout << "no spring selected" << std::endl;
