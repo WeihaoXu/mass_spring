@@ -35,6 +35,9 @@ public:
 	bool isPoseDirty() const { return pose_changed_; }
 	void clearPose() { pose_changed_ = false; }
 
+	bool toTear() const {return to_tear_;}
+	void clearTearFlag() {to_tear_ = false;}
+
 	bool toResetSystem() {return reset_ms_system_;}
 	void clearResetFlag() {reset_ms_system_ = false;}
 
@@ -58,6 +61,7 @@ private:
 
 	bool reset_ms_system_ = false;
 	bool to_random_disturb_ = false;
+	bool to_tear_ = false;
 
 	bool drag_state_ = false;
 	bool fps_mode_ = false;

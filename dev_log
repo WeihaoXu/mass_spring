@@ -1,0 +1,2 @@
+problem1:
+When break a spring, two neighboring triangles should be deleted(deallocated). However, in this way a triangle might be deallocated three times, causing segfault. In addition, in C++ we are not able to know whether an objected as been deallocated just based on the pointer we have.

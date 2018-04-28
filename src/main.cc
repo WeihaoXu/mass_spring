@@ -261,10 +261,15 @@ int main(int argc, char* argv[])
 			gui.clearDisturbFlag();
 		}
 
+		if (gui.toTear()) {
+			cloth.randomTear();
+			gui.clearTearFlag();
+		}
+
 		
 		float delta_t = (float) toc(timer) * gui.getTimeSpeed();
 		delta_t *= 1.0;
-		std::cout << "delta_t = " << delta_t << std::endl;
+		// std::cout << "delta_t = " << delta_t << std::endl;
 		cloth.animate(delta_t);
 		
 

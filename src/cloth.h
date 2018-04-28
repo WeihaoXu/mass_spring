@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <unordered_set>
+#include <glm/gtx/string_cast.hpp>
+#include <map>
 
 
 #define G 9.8
@@ -16,7 +18,7 @@ struct Triangle;
 
 // Nodes in the spring.
 struct Particle {
-	Particle(glm::vec3 init_position, float mass, glm::vec2 uv_coords, int grid_x, int grid_z);
+	Particle(glm::vec3 init_position, glm::vec3 curr_position, float mass, glm::vec2 uv_coords, int grid_x = -1, int grid_z = -1);
 	~Particle();
 	
 	void resetForce();	// clear all forces except for gravity.
@@ -42,6 +44,9 @@ struct Particle {
 };
 
 struct Triangle {
+	Triangle(Particle* p1, Particle* p2, Particle* p3);
+	Triangle();
+	~Triangle();
 	std::vector<Particle*> particles_;	// length == 3. Three particles.
 };
 
@@ -52,8 +57,9 @@ struct Spring {
 
 	void computeForceQuantity();	// compute the force quantity, and store it in force_quantity_
 	void applyForce();	// compute two force vectors, and apply them to two particles connected to the spring.
+	void replaceTriangle(Triangle* t_old, Triangle* t_new);
 
-	std::vector<Particle*> particles_;	// two particles
+	std::vector<Particle*> nb_particles_;	// two particles neighboring to but not owned by the spring.
 	std::vector<Triangle*> triangles_;	// a spring is neighbor to either 1 or 2 triangles.
 
 	Particle* p1_;
@@ -74,6 +80,7 @@ public:
 	Cloth(int x_size, int z_size);
 	~Cloth();
 	void animate(float delta_t);	// recalculate the forces, velocities and positions. Finally update cache
+	void randomTear();
 
 	// The following vectors are cache for GPU rendering.
 	std::vector<glm::vec3> vertices;		// for rendering the cloth
@@ -85,11 +92,20 @@ private:
 	int getParticleIdx(int x, int z);
 	bool gridCoordValid(int x, int z);	
 	void refreshCache();	// update the cache for rendiering
+	void tear(Spring* s);
+	Particle* getNeighborParticle(Triangle* t1, Spring* s);
+	bool containsStructSpring(Particle* p1, Particle* p2);
+	Spring* addStructSpring(Particle* p1, Particle* p2, float k);
+	Spring* getStructSpring(Particle* p1, Particle* p2);
+	void removeStructSpring(Spring* s);
 
 
 	std::vector<Particle*> particles_;
 	std::unordered_set<Triangle*> triangles_;	//stored in a hashset for constant time access, modify and delete
 	std::unordered_set<Spring*> springs_;		//stored in a hashset for constant time access, modify and delete
+
+	std::map<Particle*, std::map<Particle*, Spring*>> spring_map_; // key: particle pairs. Value: springs.
+
 
 	int x_size_, z_size_;
 	const float grid_width_ = 2.0;
