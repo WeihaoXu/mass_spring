@@ -4,7 +4,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <GLFW/glfw3.h>
+#include "cloth.h"
 
+#define PICK_RAY_LEN 1000.0f
 
 struct Mesh;
 
@@ -24,6 +26,7 @@ public:
 	void mousePosCallback(double mouse_x, double mouse_y);
 	void mouseButtonCallback(int button, int action, int mods);
 	void updateMatrices();
+	void assignCloth(Cloth* cloth) {cloth_ = cloth;}
 	MatrixPointers getMatrixPointers() const;
 
 	static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -56,6 +59,7 @@ public:
 private:
 	GLFWwindow* window_;
 	// Mesh* mesh_;
+	Cloth* cloth_;
 
 	int window_width_, window_height_;
 

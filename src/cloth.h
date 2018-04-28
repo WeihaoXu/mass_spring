@@ -7,10 +7,12 @@
 #include <unordered_set>
 #include <glm/gtx/string_cast.hpp>
 #include <map>
-
+#include "helper_functions.h"
 
 #define G 9.8
 #define PI 3.1416
+#define SPRING_CYLINDER_RADIUS 0.5f
+
 
 
 struct Spring;
@@ -81,12 +83,17 @@ public:
 	~Cloth();
 	void animate(float delta_t);	// recalculate the forces, velocities and positions. Finally update cache
 	void randomTear();
+	const std::unordered_set<Spring*>& getSprings() {return springs_;}
 
 	// The following vectors are cache for GPU rendering.
 	std::vector<glm::vec3> vertices;		// for rendering the cloth
 	std::vector<glm::vec2> cloth_uv_coords;	// for texture mapping the the future.
 	std::vector<glm::vec3> struct_spring_vertices;	// used to linemesh springs. For debug use. 
 	std::vector<glm::vec3> bend_spring_vertices;	// used to linemesh springs. For debug use. 
+
+	glm::vec3 pick_ray_start = glm::vec3(0.0f);
+	glm::vec3 pick_ray_end = glm::vec3(0.0f);
+
 
 private:
 	int getParticleIdx(int x, int z);
@@ -99,16 +106,17 @@ private:
 	Spring* getStructSpring(Particle* p1, Particle* p2);
 	void removeStructSpring(Spring* s);
 
+	void setCurrentSpring();
+
 
 	std::vector<Particle*> particles_;
 	std::unordered_set<Triangle*> triangles_;	//stored in a hashset for constant time access, modify and delete
 	std::unordered_set<Spring*> springs_;		//stored in a hashset for constant time access, modify and delete
-
 	std::map<Particle*, std::map<Particle*, Spring*>> spring_map_; // key: particle pairs. Value: springs.
 
-
+	Spring* picked_spring = nullptr;
 	int x_size_, z_size_;
-	const float grid_width_ = 2.0;
+	const float grid_width_ = 20.0;
 	const float struct_k_ = 100.0;	// spring constant of bending springs
 	const float bend_sheer_k_ = 10.0;	// spring constant of bending springs. (there bending springs also used as sheering springs)
 	const float damper_ = 0.06;

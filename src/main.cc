@@ -103,12 +103,14 @@ int main(int argc, char* argv[])
 
 	
 
-	int cloth_x_size = 11;
-	int cloth_z_size = 11;
+	int cloth_x_size = 3;
+	int cloth_z_size = 3;
 
 	Cloth cloth(cloth_x_size, cloth_z_size);
 	TicTocTimer *timer = new TicTocTimer;
 	*timer = tic();
+
+	gui.assignCloth(&cloth);
 
 
 	glm::vec4 light_position = glm::vec4(0.0f, 100.0f, 0.0f, 1.0f);

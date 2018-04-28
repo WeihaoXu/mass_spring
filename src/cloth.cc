@@ -435,8 +435,30 @@ void Cloth::animate(float delta_t) {
 		}
 	}
 
+	setCurrentSpring();
+	// std::cout << "pick ray start: " << glm::to_string(pick_ray_start) << std::endl;
+	if(picked_spring) {
+		std::cout << "spring selected" << std::endl;
+		// tear(picked_spring);
+	}
+	else {
+		std::cout << "no spring selected" << std::endl;
+	}
+
 
 	refreshCache();
+}
+
+void Cloth::setCurrentSpring() {
+	picked_spring = nullptr;
+	float min_distance = std::numeric_limits<float>::max();
+	for(Spring* s : springs_) {	// iterate all springs, and find the one with min distance
+		float curr_distance = line_segment_distance(pick_ray_start, pick_ray_end, s->p1_->position_, s->p2_->position_);
+		if(curr_distance < SPRING_CYLINDER_RADIUS && curr_distance < min_distance) {
+			min_distance = curr_distance;
+			picked_spring = s;
+		}
+	}
 }
 
 

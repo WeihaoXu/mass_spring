@@ -8,6 +8,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/string_cast.hpp>
+
 
 
 GUI::GUI(GLFWwindow* window)
@@ -90,8 +92,22 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 		tangent_ = glm::column(orientation_, 0);
 		up_ = glm::column(orientation_, 1);
 		look_ = glm::column(orientation_, 2);
-	} 
+	}
 
+	// std::cout << "mouse position: " << glm::to_string(glm::vec2(mouse_x, mouse_y)) << std::endl;
+	glm::vec3 mouse_pos = glm::unProject(glm::vec3(current_x_, current_y_, 1.0f),
+											view_matrix_,
+											projection_matrix_,
+											viewport);
+	// std::cout << "current position in world coords: (" << mouse_pos.x << ", " << mouse_pos.y << ", " << mouse_pos.z << ")" << std::endl;
+	
+	// pick spring, similar to bone picking in animation project.
+	{
+		glm::vec3 pick_ray_direct = glm::normalize(mouse_pos - eye_);
+		glm::vec3 pick_ray_end = eye_ + PICK_RAY_LEN * pick_ray_direct;
+		cloth_->pick_ray_start = eye_;
+		cloth_->pick_ray_end = pick_ray_end;
+	}
 	
 }
 
