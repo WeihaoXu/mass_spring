@@ -54,7 +54,7 @@ struct Triangle {
 
 struct Spring {
 
-	Spring(Particle* p1, Particle* p2, float k);	// k is the spring constant
+	Spring(Particle* p1, Particle* p2, float k, bool is_secondary = false);	// k is the spring constant
 	~Spring();
 
 	void computeForceQuantity();	// compute the force quantity, and store it in force_quantity_
@@ -73,6 +73,7 @@ struct Spring {
 	float init_length_;
 	float k_;
 	float max_deform_rate_ = 0.1f;
+	bool is_secondary_ = false;
 
 };
 
@@ -103,7 +104,7 @@ private:
 	void tear(Spring* s);
 	Particle* getNeighborParticle(Triangle* t1, Spring* s);
 	bool containsStructSpring(Particle* p1, Particle* p2);
-	Spring* addStructSpring(Particle* p1, Particle* p2, float k);
+	Spring* addStructSpring(Particle* p1, Particle* p2, float k, bool is_secondary);
 	Spring* getStructSpring(Particle* p1, Particle* p2);
 	void removeStructSpring(Spring* s);
 

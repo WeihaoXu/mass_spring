@@ -46,8 +46,8 @@ Triangle::~Triangle() {
 
 }
 
-Spring::Spring(Particle* p1, Particle* p2, float k):
-			p1_(p1), p2_(p2), k_(k)
+Spring::Spring(Particle* p1, Particle* p2, float k, bool is_secondary):
+			p1_(p1), p2_(p2), k_(k), is_secondary_(is_secondary)
 {
 	init_length_ = glm::length(p1_->position_ - p2_->position_);
 }
@@ -156,7 +156,7 @@ Cloth::Cloth(int x_size, int z_size):
 			Particle* p1 = triangle->particles_[idx];
 			Particle* p2 = triangle->particles_[(idx + 1) % 3];
 			if(!containsStructSpring(p1, p2)) {
-				Spring* s = addStructSpring(p1, p2, struct_k_);	// problem: how find bending spring?
+				Spring* s = addStructSpring(p1, p2, struct_k_, false);	// problem: how find bending spring?
 				s->triangles_.push_back(triangle);
 				// std::cout << "add triangle when create spring" << std::endl;
 				p1->springs_.push_back(s);
@@ -294,7 +294,7 @@ void Cloth::tear(Spring* s) {
 	glm::vec2 pp1_uv_coords = center_uv_coords;
 	Particle* pp1 = new Particle(pp1_init_pos, pp1_curr_pos, p1->mass_ / 2.0, pp1_uv_coords);
 	particles_.push_back(pp1);
-	Spring* ss1 = addStructSpring(p1, pp1, struct_k_);
+	Spring* ss1 = addStructSpring(p1, pp1, struct_k_, true);
 
 
 
@@ -303,7 +303,7 @@ void Cloth::tear(Spring* s) {
 	glm::vec2 pp2_uv_coords = center_uv_coords;
 	Particle* pp2 = new Particle(pp2_init_pos, pp2_curr_pos, p2->mass_ / 2.0, pp2_uv_coords);
 	particles_.push_back(pp2);
-	Spring* ss2 = addStructSpring(p2, pp2, struct_k_);
+	Spring* ss2 = addStructSpring(p2, pp2, struct_k_, true);
 	
 
 	removeStructSpring(s);
@@ -319,8 +319,8 @@ void Cloth::tear(Spring* s) {
 		ss1->triangles_.push_back(tt1);
 		ss2->triangles_.push_back(tt2);
 
-		Spring* ss11 = addStructSpring(pp1, nb_p1, struct_k_);
-		Spring* ss12 = addStructSpring(pp2, nb_p1, struct_k_);
+		Spring* ss11 = addStructSpring(pp1, nb_p1, struct_k_, true);
+		Spring* ss12 = addStructSpring(pp2, nb_p1, struct_k_, true);
 		ss11->triangles_.push_back(tt1);
 		ss12->triangles_.push_back(tt2);
 
@@ -340,8 +340,8 @@ void Cloth::tear(Spring* s) {
 		ss1->triangles_.push_back(tt1);
 		ss2->triangles_.push_back(tt2);
 
-		Spring* ss21 = addStructSpring(pp1, nb_p2, struct_k_);
-		Spring* ss22 = addStructSpring(pp2, nb_p2, struct_k_);
+		Spring* ss21 = addStructSpring(pp1, nb_p2, struct_k_, true);
+		Spring* ss22 = addStructSpring(pp2, nb_p2, struct_k_, true);
 		ss21->triangles_.push_back(tt1);
 		ss22->triangles_.push_back(tt2);	
 
@@ -438,14 +438,14 @@ void Cloth::animate(float delta_t) {
 	setCurrentSpring();
 	// std::cout << "pick ray start: " << glm::to_string(pick_ray_start) << std::endl;
 	if(picked_spring) {
-		std::cout << "spring selected" << std::endl;
-		if(to_tear) {
+		// std::cout << "spring selected" << std::endl;
+		if(to_tear && !picked_spring->is_secondary_) {
 			tear(picked_spring);
 		}
 		
 	}
 	else {
-		std::cout << "no spring selected" << std::endl;
+		// std::cout << "no spring selected" << std::endl;
 	}
 
 
@@ -476,11 +476,11 @@ bool Cloth::containsStructSpring(Particle* p1, Particle* p2) {
 	return (spring_map_[p1][p2] != nullptr) && (spring_map_[p2][p1] != nullptr);
 }
 
-Spring* Cloth::addStructSpring(Particle* p1, Particle* p2, float k) {
+Spring* Cloth::addStructSpring(Particle* p1, Particle* p2, float k, bool is_secondary) {
 	if(containsStructSpring(p1, p2)) {
 		throw("the sprinig you want to create already exists!");
 	}
-	Spring* s = new Spring(p1, p2, k);
+	Spring* s = new Spring(p1, p2, k, is_secondary);
 	spring_map_[p1][p2] = s;
 	spring_map_[p2][p1] = s;
 	springs_.insert(s);
