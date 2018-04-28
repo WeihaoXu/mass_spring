@@ -83,8 +83,7 @@ public:
 	Cloth(int x_size, int z_size);
 	~Cloth();
 	void animate(float delta_t);	// recalculate the forces, velocities and positions. Finally update cache
-	void randomTear();
-	const std::unordered_set<Spring*>& getSprings() {return springs_;}
+	
 
 	// The following vectors are cache for GPU rendering.
 	std::vector<glm::vec3> vertices;		// for rendering the cloth

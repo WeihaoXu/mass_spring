@@ -364,10 +364,6 @@ Particle* Cloth::getNeighborParticle(Triangle* t1, Spring* s) {
 	return nullptr;
 }
 
-void Cloth::randomTear() {
-	Spring* s = *springs_.begin();
-	tear(s);
-}
 
 void Cloth::refreshCache() {
 	// vertices and uv_coords

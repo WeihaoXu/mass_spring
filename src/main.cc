@@ -258,16 +258,6 @@ int main(int argc, char* argv[])
 			gui.clearResetFlag();
 		}
 
-		if (gui.toRandomDisturb()) {
-			//
-			gui.clearDisturbFlag();
-		}
-
-		if (gui.toTear()) {
-			cloth.randomTear();
-			gui.clearTearFlag();
-		}
-
 		
 		float delta_t = (float) toc(timer) * gui.getTimeSpeed();
 		delta_t *= 1.0;
