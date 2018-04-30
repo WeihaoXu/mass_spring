@@ -22,10 +22,10 @@ Particle::Particle(glm::vec3 init_position, glm::vec3 curr_position, float mass,
 Particle::Particle (const Particle &old_obj):
 			init_position_(old_obj.init_position_), position_(old_obj.position_), force_(old_obj.force_), velocity_(old_obj.velocity_), 
 			uv_coords_(old_obj.uv_coords_), grid_x_(old_obj.grid_x_), grid_z_(old_obj.grid_z_), mass_(old_obj.mass_), 
-			fixed_(old_obj.fixed_), is_secondary_(old_obj.is_secondary_) 
+			fixed_(old_obj.fixed_), is_secondary_(old_obj.is_secondary_), duplicated_(true)
 
 {
-
+	setMovable();
 }
 
 Particle::~Particle() {
@@ -79,7 +79,9 @@ Spring::~Spring()
 
 void Spring::computeForceQuantity() {
 	float curr_length = glm::length(p1_->position_ - p2_->position_);
-	float deform_rate = (init_length_ - curr_length) / init_length_;
+	float init_length = glm::length(p1_->init_position_ - p2_->init_position_);
+	float deform_rate = (init_length - curr_length) / init_length;
+	// float deform_rate = (init_length_ - curr_length) / init_length_;
 	if(fabs(deform_rate) > max_deform_rate_) {	// constrains. Anti-superelastic.
 		deform_rate = deform_rate * (fabs(deform_rate) / max_deform_rate_);
 	}
@@ -265,14 +267,6 @@ Cloth::Cloth(int x_size, int z_size):
 			spring->bend_spring_ = bend_spring;
 		}
 
-		// push neighboring particles to this spring. Will be used in tearing. 
-		// if(gridCoordValid(bend_x1, bend_z1)) {
-		// 	spring->nb_particles_.push_back(particles_[getParticleIdx(bend_x1, bend_z1)]);
-		// }
-
-		// if(gridCoordValid(bend_x2, bend_z2)) {
-		// 	spring->nb_particles_.push_back(particles_[getParticleIdx(bend_x2, bend_z2)]);
-		// }	
 	}
 
 	for(Particle* p : particles_) {
@@ -293,13 +287,6 @@ void Cloth::tear(Spring* s) {
 	Particle *p1 = s->p1_, *p2 = s->p2_;	// particles of current springs.
 	std::cout << "to remove spring at " << glm::to_string(glm::vec2(p1->grid_x_, p1->grid_z_)) 
 				<< ", " << glm::to_string(glm::vec2(p2->grid_x_, p2->grid_z_)) << std::endl;
-	// Particle *nb_p1 = nullptr, *nb_p2 = nullptr;	// neighboring particles.(if any)
-	// if(s->nb_particles_.size() >= 1) {
-	// 	nb_p1 = s->nb_particles_[0];
-	// }
-	// if(s->nb_particles_.size() >= 2) {
-	// 	nb_p2 = s->nb_particles_[1];
-	// }
 
 	Triangle *t1 = nullptr, *t2 = nullptr;	// neighboring triangles. (if any)
 	if(s->triangles_.size() >= 1) {
@@ -309,11 +296,6 @@ void Cloth::tear(Spring* s) {
 		t2 = s->triangles_[1];
 	}
 
-
-	// std::cout << "triangle number: " << s->triangles_.size() << std::endl;
-	// std::cout << "deleted spring position_: " << glm::to_string(s->p1_->position_) << " " 
-	// 			<< glm::to_string(s->p2_->position_) << std::endl;
-
 	// center of the teared spring.
 	glm::vec3 init_center_position = (p1->init_position_ + p2->init_position_) / 2.0f;
 	glm::vec3 curr_center_position = (p1->position_ + p2->position_) / 2.0f;
@@ -321,22 +303,18 @@ void Cloth::tear(Spring* s) {
 
 	// two new particles created because of the tearing
 	glm::vec3 pp1_init_pos = init_center_position;
-	glm::vec3 pp1_curr_pos = p1->position_ + (curr_center_position - p1->position_) * 0.75f;
+	glm::vec3 pp1_curr_pos = p1->position_ + (curr_center_position - p1->position_) * 0.85f;
 	glm::vec2 pp1_uv_coords = center_uv_coords;
 	Particle* pp1 = new Particle(pp1_init_pos, pp1_curr_pos, p1->mass_ / 2.0, pp1_uv_coords, true);
 	particles_.push_back(pp1);
 	Spring* ss1 = addStructSpring(p1, pp1, struct_k_, true);
 
-
-
 	glm::vec3 pp2_init_pos = init_center_position;
-	glm::vec3 pp2_curr_pos = p2->position_ + (curr_center_position - p2->position_) * 0.75f;
+	glm::vec3 pp2_curr_pos = p2->position_ + (curr_center_position - p2->position_) * 0.85f;
 	glm::vec2 pp2_uv_coords = center_uv_coords;
 	Particle* pp2 = new Particle(pp2_init_pos, pp2_curr_pos, p2->mass_ / 2.0, pp2_uv_coords, true);
 	particles_.push_back(pp2);
 	Spring* ss2 = addStructSpring(p2, pp2, struct_k_, true);
-	
-
 
 	if(t1) {
 		Particle* nb_p1 = getNeighborParticle(t1, s);
@@ -349,14 +327,10 @@ void Cloth::tear(Spring* s) {
 		ss1->triangles_.push_back(tt1);
 		ss2->triangles_.push_back(tt2);
 
-		// if(!nb_p1->is_secondary_) {
-			std::cout << "nb_p1 not secondary" << std::endl;
-			Spring* ss11 = addStructSpring(pp1, nb_p1, struct_k_, true);
-			Spring* ss12 = addStructSpring(pp2, nb_p1, struct_k_, true);
-			ss11->triangles_.push_back(tt1);
-			ss12->triangles_.push_back(tt2);
-		// }
-	
+		Spring* ss11 = addStructSpring(pp1, nb_p1, struct_k_, true);
+		Spring* ss12 = addStructSpring(pp2, nb_p1, struct_k_, true);
+		ss11->triangles_.push_back(tt1);
+		ss12->triangles_.push_back(tt2);
 
 		getStructSpring(p1, nb_p1)->replaceTriangle(t1, tt1);
 		getStructSpring(p2, nb_p1)->replaceTriangle(t1, tt2);
@@ -374,13 +348,10 @@ void Cloth::tear(Spring* s) {
 		ss1->triangles_.push_back(tt1);
 		ss2->triangles_.push_back(tt2);
 
-		// if(!nb_p2->is_secondary_) {
-			std::cout << "nb_p2 not secondary" << std::endl;
-			Spring* ss21 = addStructSpring(pp1, nb_p2, struct_k_, true);
-			Spring* ss22 = addStructSpring(pp2, nb_p2, struct_k_, true);
-			ss21->triangles_.push_back(tt1);
-			ss22->triangles_.push_back(tt2);	
-		// }
+		Spring* ss21 = addStructSpring(pp1, nb_p2, struct_k_, true);
+		Spring* ss22 = addStructSpring(pp2, nb_p2, struct_k_, true);
+		ss21->triangles_.push_back(tt1);
+		ss22->triangles_.push_back(tt2);	
 		
 		getStructSpring(p1, nb_p2)->replaceTriangle(t2, tt1);
 		getStructSpring(p2, nb_p2)->replaceTriangle(t2, tt2);
@@ -389,7 +360,6 @@ void Cloth::tear(Spring* s) {
 
 	}
 	removeStructSpring(s);
-
 }
 
 Particle* Cloth::getNeighborParticle(Triangle* t1, Spring* s) {
@@ -416,7 +386,6 @@ void Cloth::refreshCache() {
 		}
 	}
 
-
 	// spring linemesh
 	struct_spring_vertices.clear();
 	bend_spring_vertices.clear();
@@ -434,15 +403,10 @@ void Cloth::refreshCache() {
 	}
 	// std::cout << "end push bend spring" << std::endl;
 
-
-
-
 }
 
 void Cloth::animate(float delta_t) {
 	// clear all forces except for gravity
-	// std::cout << "currently have " << particles_.size() << "particles" << std::endl;
-
 	std::vector<Particle*> splitted_particles;
 	for(auto itr = particles_.begin(); itr != particles_.end(); itr++) {
 		std::map<int, std::unordered_set<Particle*>> particle_groups;
@@ -458,57 +422,21 @@ void Cloth::animate(float delta_t) {
 		particle->resetForce();
 	}
 
-	
-	// std::unordered_set<Spring*> springs_to_remove;
-	// for(Triangle* t : triangles_) {
-	// 	Particle *p0 = t->particles_[0], *p1 = t->particles_[1], *p2 = t->particles_[2];
-	// 	Spring *s0 = spring_map_[p0][p1], *s1 = spring_map_[p1][p2], *s2 = spring_map_[p2][p0];
-	// 	if(shareSecondaryParticle(s0, s1)) {
-	// 		springs_to_remove.insert(s0);
-	// 		springs_to_remove.insert(s1);
-	// 	}	
-	// 	if(shareSecondaryParticle(s1, s2)) {
-	// 		springs_to_remove.insert(s1);
-	// 		springs_to_remove.insert(s2);
-	// 	}
-	// 	if(shareSecondaryParticle(s2, s0)) {
-	// 		springs_to_remove.insert(s2);
-	// 		springs_to_remove.insert(s0);
-	// 	}
-	// }
-	// for(Spring* s : springs_to_remove) {
-	// 	springs_.erase(s);
-	// }
 
 	// update forces
 	for(Spring* struct_s : springs_) {
 		struct_s->computeForceQuantity();
 		// TODO: if force quantity exceeds limit, break the spring
 		struct_s->applyForce();
-		
+		if(struct_s->force_quantity_ == 0.0f) {
+			std::cout << "spring force quantity zero" << std::endl;
+		}
+
 		if(struct_s->bend_spring_) {
 			struct_s->bend_spring_->computeForceQuantity();
 			struct_s->bend_spring_->applyForce();
-
 		}
 	}
-	// for(auto itr = springs_.begin(); itr != springs_.end(); itr++) {
-	// 	Spring* struct_s = *itr;
-	// 	if(struct_s->p1_->is_secondary_ && struct_s->p2_->is_secondary_) {
-	// 		springs_.erase(struct_s);
-	// 		continue;
-	// 	}
-
-	// 	struct_s->computeForceQuantity();
-	// 	// TODO: if force quantity exceeds limit, break the spring
-	// 	struct_s->applyForce();
-		
-	// 	if(struct_s->bend_spring_) {
-	// 		struct_s->bend_spring_->computeForceQuantity();
-	// 		struct_s->bend_spring_->applyForce();
-
-	// 	}
-	// }
 
 
 	// update particle velocity and positions
@@ -526,18 +454,12 @@ void Cloth::animate(float delta_t) {
 	setCurrentSpring();
 	// std::cout << "pick ray start: " << glm::to_string(pick_ray_start) << std::endl;
 	if(picked_spring) {
-		// std::cout << "spring selected" << std::endl;
 		if(to_tear && !picked_spring->is_secondary_) {
 			tear(picked_spring);
 		}
-		
 	}
-	else {
-		// std::cout << "no spring selected" << std::endl;
-	}
-
-
 	refreshCache();
+	// std::cout << std::endl;
 }
 
 void Cloth::groupNeighbors(Particle* p, std::map<int, std::unordered_set<Particle*>>& groups) {
@@ -609,7 +531,7 @@ int Cloth::findRoot(std::vector<int>& uf, int idx) {
 	return idx;
 }
 
-void Cloth::duplicateParticles(Particle* p, std::map<int, std::unordered_set<Particle*>>& groups, std::vector<Particle*> new_particles) {
+void Cloth::duplicateParticles(Particle* p, std::map<int, std::unordered_set<Particle*>>& groups, std::vector<Particle*>& new_particles) {
 	if(groups.size() <= 1) {
 		return;
 	} 
@@ -636,6 +558,7 @@ void Cloth::duplicateParticles(Particle* p, std::map<int, std::unordered_set<Par
 			for(Triangle* t : s->triangles_) {	// replace the particle in old triangles. At most two triangles
 				for(int p_idx = 0; p_idx < t->particles_.size(); p_idx++) {
 					if(t->particles_[p_idx] == p) {
+						std::cout << "triangle particle replaced by new particle" << std::endl;
 						t->particles_[p_idx] = p_copy;
 					}
 				}
@@ -701,17 +624,7 @@ void Cloth::removeStructSpring(Spring* s) {
 	springs_.erase(s);
 	spring_map_[s->p1_][s->p2_] = nullptr;
 	spring_map_[s->p2_][s->p1_] = nullptr;
-	// delete s;
-}
-
-bool Cloth::shareSecondaryParticle(Spring* s1, Spring* s2) {
-	if((!s1) || (!s2)) return false;
-	// return ((s1->p1_ == s2->p1_ && s1->p1_->is_secondary_)
-	// 		|| (s1->p2_ == s2->p2_ && s1->p2_->is_secondary_)
-	// 		|| (s1->p1_ == s2->p2_ && s1->p1_->is_secondary_)
-	// 		|| (s1->p2_ == s2->p1_ && s1->p2_->is_secondary_)
-	// 		);
-	return false;
+	delete s;
 }
 
 
