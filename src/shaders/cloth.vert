@@ -12,7 +12,7 @@ out vec2 uv_frag;
 void main() {
 	mat4 mvp = projection * view * model;
 	gl_Position = mvp * vec4(vertex_position, 1.0);
-	uv_frag = uv;
+	uv_frag = vec2(uv[0] - 0.6, uv[1]);
 }
 
 )zzz"

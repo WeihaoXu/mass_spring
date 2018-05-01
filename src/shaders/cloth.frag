@@ -3,12 +3,18 @@ R"zzz(
 
 in vec2 uv_frag;
 
+uniform sampler2D sampler;
 out vec4 fragment_color;
 
+
 void main() {
+	/*
 	fragment_color = vec4(1.0, 1.0, 0.0, 1.0);
 	if(uv_frag[0] <= 0.01 || uv_frag[0] >= 0.99 || uv_frag[1] <= 0.01 || uv_frag[1] >= 0.99) {
 		fragment_color = vec4(1.0, 0.0, 0.0, 1.0);
 	}
+	*/
+	vec3 texcolor = texture(sampler, uv_frag).xyz;
+	fragment_color = vec4(texcolor.rgb, 1.0);
 }
 )zzz"

@@ -118,16 +118,36 @@ void Spring::replaceParticle(Particle* p_old, Particle* p_new) {
 	}
 }
 
+void Cloth::resetCloth() {
+	for(Particle* p : particles_) {
+		p->position_ = p->init_position_;
+		p->velocity_ = glm::vec3(0.0);
+	}
+	setInitAnchorNodes();
+}
+
+void Cloth::setInitAnchorNodes() {
+	particles_[getParticleIdx(0, 0)]->setFixed();
+	// particles_[getParticleIdx(0, z_size_ - 1)]->setFixed();
+	particles_[getParticleIdx(x_size_ - 1, 0)]->setFixed();
+	// particles_[getParticleIdx(x_size_ - 1, z_size_ - 1)]->setFixed();
+
+	// particles_[getParticleIdx(x_size_ / 2 - 1, 0)]->setFixed();
+	// particles_[getParticleIdx(x_size_ / 2 - 1, z_size_ - 1)]->setFixed();
+}
+
 Cloth::Cloth(int x_size, int z_size):
 		x_size_(x_size), z_size_(z_size)
 {
 	// build grid
+	float total_x_width = (x_size_ - 1) * grid_width_, total_z_width = (z_size_ - 1 + 0.5) * grid_width_;
 	for(int x = 0; x < x_size_; x++) {
 		float z_offset = (x % 2 == 0)? 0.0 : (0.5 * grid_width_);
 		for(int z = 0; z < z_size_; z++) {
-			glm::vec3 position(x * grid_width_, init_height_, z * grid_width_ + z_offset);
-			glm::vec2 uv_coords(1.0 * x / (x_size_ - 1), 1.0 * z / (z_size_ - 1));
-			// std::cout << "uv = " << glm::to_string(uv_coords) << std::endl;
+			float pos_x = x * grid_width_, pos_z = z * grid_width_ + z_offset;
+			glm::vec3 position(pos_x, init_height_, pos_z);
+			glm::vec2 uv_coords(pos_x / total_x_width, pos_z / total_z_width);
+			std::cout << "uv = " << glm::to_string(uv_coords) << std::endl;
 			Particle* particle = new Particle(position, position, particle_mass_, uv_coords, x, z);
 			particles_.push_back(particle);
 			// std::cout << "particles " << glm::to_string(particle->position_) << std::endl;
@@ -136,10 +156,7 @@ Cloth::Cloth(int x_size, int z_size):
 	// std::cout << "cloth built, particle number: " << particles_.size() << std::endl;
 
 	// set two anchor nodes. For experiments.
-	particles_[getParticleIdx(0, 0)]->setFixed();
-	particles_[getParticleIdx(0, z_size_ - 1)]->setFixed();
-	particles_[getParticleIdx(x_size_ - 1, 0)]->setFixed();
-	particles_[getParticleIdx(x_size_ - 1, z_size_ - 1)]->setFixed();
+	setInitAnchorNodes();
 
 	// create triangles
 	for(int x = 0; x < x_size_; x++) {
@@ -429,7 +446,7 @@ void Cloth::animate(float delta_t) {
 		// TODO: if force quantity exceeds limit, break the spring
 		struct_s->applyForce();
 		if(struct_s->force_quantity_ == 0.0f) {
-			std::cout << "spring force quantity zero" << std::endl;
+			// std::cout << "spring force quantity zero" << std::endl;
 		}
 
 		if(struct_s->bend_spring_) {

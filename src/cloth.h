@@ -9,7 +9,7 @@
 #include <map>
 #include "helper_functions.h"
 
-#define G 9.8
+#define G (4*9.8)
 #define PI 3.1416
 #define SPRING_CYLINDER_RADIUS 0.5f
 
@@ -86,7 +86,8 @@ public:
 	Cloth(int x_size, int z_size);
 	~Cloth();
 	void animate(float delta_t);	// recalculate the forces, velocities and positions. Finally update cache
-	
+	void resetCloth();
+
 
 	// The following vectors are cache for GPU rendering.
 	std::vector<glm::vec3> vertices;		// for rendering the cloth
@@ -103,6 +104,7 @@ private:
 	int getParticleIdx(int x, int z);
 	bool gridCoordValid(int x, int z);	
 	void refreshCache();	// update the cache for rendiering
+	void setInitAnchorNodes();
 	void tear(Spring* s);
 	Particle* getNeighborParticle(Triangle* t1, Spring* s);
 	bool containsStructSpring(Particle* p1, Particle* p2);
@@ -117,6 +119,8 @@ private:
 	
 	int findRoot(std::vector<int>& uf, int idx);	// a helper function for union-find algorithm
 
+
+
 	std::vector<Particle*> particles_;
 	std::unordered_set<Triangle*> triangles_;	//stored in a hashset for constant time access, modify and delete
 	std::unordered_set<Spring*> springs_;		//stored in a hashset for constant time access, modify and delete
@@ -127,7 +131,7 @@ private:
 	const float grid_width_ = 2.0;
 	const float struct_k_ = 50.0;	// spring constant of bending springs
 	const float bend_sheer_k_ = 0.0;	// spring constant of bending springs. (there bending springs also used as sheering springs)
-	const float damper_ = 0.15;
+	const float damper_ = 0.25;
 	const float particle_mass_ = 0.2;	// init mass of every particle.
 	const float init_height_ = 0.0;		// init height of the cloth. (i.e. init z position of all particles)
 

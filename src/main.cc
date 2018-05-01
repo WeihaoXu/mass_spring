@@ -7,15 +7,17 @@
 #include "config.h"
 #include "gui.h"
 #include "tictoc.h"
-
+// #include "image_loader.hpp"
 #include "cloth.h"
+#include "jpegio.h"
+#include "image.h"
+
 
 #include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
-
 
 
 #include <glm/gtx/component_wise.hpp>
@@ -95,23 +97,35 @@ GLFWwindow* init_glefw()
 }
 
 int main(int argc, char* argv[])
-{
+{	
 
 	GLFWwindow *window = init_glefw();
 	GUI gui(window);
 
-
-	
-
+	// create cloth
 	int cloth_x_size = 11;
 	int cloth_z_size = 11;
-
 	Cloth cloth(cloth_x_size, cloth_z_size);
+	gui.assignCloth(&cloth);
 	TicTocTimer *timer = new TicTocTimer;
 	*timer = tic();
+	
+	// load texture
+	GLuint texid;
+    
+    Image image;
+    bool load_success = LoadJPEG("../textures/ut.jpg", &image);
 
-	gui.assignCloth(&cloth);
 
+     /* OpenGL texture binding of the image loaded by DevIL  */
+	glGenTextures(1, &texid); /* Texture name generation */
+	glBindTexture(GL_TEXTURE_2D, texid); /* Binding of texture name */
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); /* We will use linear interpolation for magnification filter */
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); /* We will use linear interpolation for minifying filter */
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width, image.height, 0, GL_RGB, GL_UNSIGNED_BYTE, image.bytes.data());
+	// glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP), ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 
+	// 				0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData()); /* Texture specification */
+	
 
 	glm::vec4 light_position = glm::vec4(0.0f, 100.0f, 0.0f, 1.0f);
 	MatrixPointers mats; // Define MatrixPointers here for lambda to capture
@@ -140,7 +154,12 @@ int main(int argc, char* argv[])
 	auto int_binder = [](int loc, const void* data) {
 		glUniform1iv(loc, 1, (const GLint*)data);
 	};
-	
+	auto texture0_binder = [](int loc, const void* data) {
+		CHECK_GL_ERROR(glUniform1i(loc, 0));
+		CHECK_GL_ERROR(glActiveTexture(GL_TEXTURE0 + 0));
+		CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_2D, (long)data));
+		//std::cerr << " bind texture " << long(data) << std::endl;
+	};
 
 	/*
 	 * The lambda functions below are used to retrieve data
@@ -172,6 +191,9 @@ int main(int argc, char* argv[])
 	auto identity_model_data = [&identity_model_mat]() -> const void* {
 		return &identity_model_mat[0][0];
 	};
+	auto sampler_data = [&texid]() -> const void* {
+		return (const void*)(intptr_t)texid;
+	};
 
 	// FIXME: add more lambdas for data_source if you want to use RenderPass.
 	//        Otherwise, do whatever you like here
@@ -185,6 +207,7 @@ int main(int argc, char* argv[])
 	ShaderUniform std_light = { "light_position", vector_binder, std_light_data };
 	ShaderUniform object_alpha = { "alpha", float_binder, alpha_data };
 	ShaderUniform identity_model = {"model", matrix_binder, identity_model_data };
+	ShaderUniform sampler_uniform = { "sampler", texture0_binder, sampler_data };
 
 	// FIXME: define more ShaderUniforms for RenderPass if you want to use it.
 	//        Otherwise, do whatever you like here
@@ -199,7 +222,7 @@ int main(int argc, char* argv[])
 	RenderPass cloth_pass(-1,
 			cloth_pass_input,
 			{ cloth_vertex_shader, nullptr, cloth_fragment_shader },
-			{ std_model, std_view, std_proj, std_light },
+			{ std_model, std_view, std_proj, std_light, sampler_uniform},
 			{ "fragment_color" }
 			);
 
@@ -254,7 +277,7 @@ int main(int argc, char* argv[])
 		}
 
 		if (gui.toResetSystem()) {
-			// 
+			cloth.resetCloth();
 			gui.clearResetFlag();
 		}
 
@@ -301,6 +324,10 @@ int main(int argc, char* argv[])
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}
+	/* Delete used resources and quit */
+    // ilDeleteImages(1, &image); /* Because we have already copied image data into texture data we can release memory used by image. */
+    glDeleteTextures(1, &texid);
+ 
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	exit(EXIT_SUCCESS);
