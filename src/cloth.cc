@@ -127,10 +127,14 @@ void Cloth::resetCloth() {
 }
 
 void Cloth::setInitAnchorNodes() {
-	particles_[getParticleIdx(0, 0)]->setFixed();
-	// particles_[getParticleIdx(0, z_size_ - 1)]->setFixed();
-	particles_[getParticleIdx(x_size_ - 1, 0)]->setFixed();
-	// particles_[getParticleIdx(x_size_ - 1, z_size_ - 1)]->setFixed();
+	// particles_[getParticleIdx(0, 0)]->setFixed();								//(0, 0)
+	// particles_[getParticleIdx(0, z_size_ - 1)]->setFixed();						//(0, 1)
+	// particles_[getParticleIdx(x_size_ - 1, 0)]->setFixed();						//(1, 0)
+	// particles_[getParticleIdx(x_size_ - 1, z_size_ - 1)]->setFixed();			//(1, 1)
+
+	for(int x = 0; x < x_size_; x++) {
+		particles_[getParticleIdx(x, 0)]->setFixed();
+	}
 
 	// particles_[getParticleIdx(x_size_ / 2 - 1, 0)]->setFixed();
 	// particles_[getParticleIdx(x_size_ / 2 - 1, z_size_ - 1)]->setFixed();
@@ -139,6 +143,7 @@ void Cloth::setInitAnchorNodes() {
 Cloth::Cloth(int x_size, int z_size):
 		x_size_(x_size), z_size_(z_size)
 {
+	wind_force_ = x_size_ * z_size_ * particle_mass_ * glm::vec3(0.0, 0.0, 1.0) / 10.0f;
 	// build grid
 	float total_x_width = (x_size_ - 1) * grid_width_, total_z_width = (z_size_ - 1 + 0.5) * grid_width_;
 	for(int x = 0; x < x_size_; x++) {
@@ -147,7 +152,7 @@ Cloth::Cloth(int x_size, int z_size):
 			float pos_x = x * grid_width_, pos_z = z * grid_width_ + z_offset;
 			glm::vec3 position(pos_x, init_height_, pos_z);
 			glm::vec2 uv_coords(pos_x / total_x_width, pos_z / total_z_width);
-			std::cout << "uv = " << glm::to_string(uv_coords) << std::endl;
+			// std::cout << "uv = " << glm::to_string(uv_coords) << std::endl;
 			Particle* particle = new Particle(position, position, particle_mass_, uv_coords, x, z);
 			particles_.push_back(particle);
 			// std::cout << "particles " << glm::to_string(particle->position_) << std::endl;
@@ -286,9 +291,6 @@ Cloth::Cloth(int x_size, int z_size):
 
 	}
 
-	for(Particle* p : particles_) {
-		std::cout << "particle spring number: " << p->springs_.size() << std::endl;
-	}
 
 	// update cache vertices
 	refreshCache();
@@ -298,6 +300,19 @@ Cloth::Cloth(int x_size, int z_size):
 
 Cloth::~Cloth() {
 
+}
+
+
+
+void Cloth::addWind() {
+	for(Triangle* t : triangles_) {
+		glm::vec3 normal = glm::normalize(glm::cross(t->particles_[1]->position_ - t->particles_[0]->position_, 
+														t->particles_[2]->position_ - t->particles_[0]->position_));
+		glm::vec3 force = fabs(glm::dot(normal, glm::normalize(wind_force_))) * wind_force_ * (sin(time_ * 10.0f) * 0.5f + 0.5f);
+		for(Particle* p : t->particles_) {
+			p->force_ += force;
+		}
+	}
 }
 
 void Cloth::tear(Spring* s) {
@@ -439,6 +454,9 @@ void Cloth::animate(float delta_t) {
 		particle->resetForce();
 	}
 
+	if(this->enable_wind) {
+		addWind();
+	}
 
 	// update forces
 	for(Spring* struct_s : springs_) {
@@ -462,9 +480,10 @@ void Cloth::animate(float delta_t) {
 		if(!particle->fixed_) {
 			glm::vec3 damper_force = -damper_ * particle->velocity_;
 			glm::vec3 acceleration = (particle->force_ + damper_force) / particle->mass_;
-			particle->velocity_ += acceleration * delta_t;
+			
+			particle->velocity_ += acceleration * delta_t * 0.5f;
 			particle->position_ += particle->velocity_ * delta_t;
-
+			
 		}
 	}
 
@@ -477,6 +496,7 @@ void Cloth::animate(float delta_t) {
 	}
 	refreshCache();
 	// std::cout << std::endl;
+	time_ += delta_t;
 }
 
 void Cloth::groupNeighbors(Particle* p, std::map<int, std::unordered_set<Particle*>>& groups) {

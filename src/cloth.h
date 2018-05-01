@@ -9,7 +9,7 @@
 #include <map>
 #include "helper_functions.h"
 
-#define G (4*9.8)
+#define G (4 * 9.8f)
 #define PI 3.1416
 #define SPRING_CYLINDER_RADIUS 0.5f
 
@@ -52,6 +52,7 @@ struct Triangle {
 	Triangle();
 	~Triangle();
 	std::vector<Particle*> particles_;	// length == 3. Three particles.
+	float area_;
 };
 
 struct Spring {
@@ -98,6 +99,7 @@ public:
 	glm::vec3 pick_ray_start = glm::vec3(0.0f); 
 	glm::vec3 pick_ray_end = glm::vec3(0.0f);
 	bool to_tear = false;
+	bool enable_wind = false;
 
 
 private:
@@ -118,7 +120,7 @@ private:
 	void duplicateParticles(Particle* p, std::map<int, std::unordered_set<Particle*>>& groups, std::vector<Particle*>& new_particles);
 	
 	int findRoot(std::vector<int>& uf, int idx);	// a helper function for union-find algorithm
-
+	void addWind();
 
 
 	std::vector<Particle*> particles_;
@@ -128,10 +130,12 @@ private:
 
 	Spring* picked_spring = nullptr;
 	int x_size_, z_size_;
+	float time_ = 0.0f;
+	glm::vec3 wind_force_;
 	const float grid_width_ = 2.0;
 	const float struct_k_ = 50.0;	// spring constant of bending springs
 	const float bend_sheer_k_ = 0.0;	// spring constant of bending springs. (there bending springs also used as sheering springs)
-	const float damper_ = 0.25;
+	const float damper_ = 0.20;
 	const float particle_mass_ = 0.2;	// init mass of every particle.
 	const float init_height_ = 0.0;		// init height of the cloth. (i.e. init z position of all particles)
 

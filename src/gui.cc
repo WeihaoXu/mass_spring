@@ -56,7 +56,7 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 	} else if (key == GLFW_KEY_RIGHT_BRACKET && action == GLFW_RELEASE) {
 		time_speed_ *= 2.0;
 	} else if (key == GLFW_KEY_T && action != GLFW_RELEASE) {
-	
+		cloth_->enable_wind = !cloth_->enable_wind;
 	} else if (key == GLFW_KEY_R && action != GLFW_RELEASE) {
 		reset_ms_system_ = true;
 	} else if (key == GLFW_KEY_P && action != GLFW_RELEASE) {

@@ -46,6 +46,10 @@ const char* cloth_vertex_shader =
 #include "shaders/cloth.vert"
 ;
 
+const char* cloth_geom_shader =
+#include "shaders/cloth.geom"
+;
+
 const char* cloth_fragment_shader =
 #include "shaders/cloth.frag"
 ;
@@ -103,8 +107,8 @@ int main(int argc, char* argv[])
 	GUI gui(window);
 
 	// create cloth
-	int cloth_x_size = 11;
-	int cloth_z_size = 11;
+	int cloth_x_size = 21;
+	int cloth_z_size = 21;
 	Cloth cloth(cloth_x_size, cloth_z_size);
 	gui.assignCloth(&cloth);
 	TicTocTimer *timer = new TicTocTimer;
@@ -221,6 +225,7 @@ int main(int argc, char* argv[])
 	
 	RenderPass cloth_pass(-1,
 			cloth_pass_input,
+			// { cloth_vertex_shader, cloth_geom_shader, cloth_fragment_shader },
 			{ cloth_vertex_shader, nullptr, cloth_fragment_shader },
 			{ std_model, std_view, std_proj, std_light, sampler_uniform},
 			{ "fragment_color" }
