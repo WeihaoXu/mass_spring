@@ -4,7 +4,7 @@
 
 Particle::Particle(glm::vec3 init_position, glm::vec3 curr_position, float mass, glm::vec2 uv_coords, int grid_x, int grid_z):
 			init_position_(init_position), position_(curr_position), mass_(mass), uv_coords_(uv_coords),
-			grid_x_(grid_x), grid_z_(grid_z), is_secondary_(false)
+			grid_x_(grid_x), grid_z_(grid_z), is_secondary_(false), old_position_(curr_position)
 {
 	resetForce();
 	setMovable();
@@ -13,7 +13,7 @@ Particle::Particle(glm::vec3 init_position, glm::vec3 curr_position, float mass,
 
 Particle::Particle(glm::vec3 init_position, glm::vec3 curr_position, float mass, glm::vec2 uv_coords, bool is_secondary):
 			init_position_(init_position), position_(curr_position), mass_(mass), uv_coords_(uv_coords),
-			grid_x_(-1), grid_z_(-1), is_secondary_(is_secondary)
+			grid_x_(-1), grid_z_(-1), is_secondary_(is_secondary), old_position_(curr_position)
 {
 	resetForce();
 	setMovable();
@@ -22,7 +22,7 @@ Particle::Particle(glm::vec3 init_position, glm::vec3 curr_position, float mass,
 Particle::Particle (const Particle &old_obj):
 			init_position_(old_obj.init_position_), position_(old_obj.position_), force_(old_obj.force_), velocity_(old_obj.velocity_), 
 			uv_coords_(old_obj.uv_coords_), grid_x_(old_obj.grid_x_), grid_z_(old_obj.grid_z_), mass_(old_obj.mass_), 
-			fixed_(old_obj.fixed_), is_secondary_(old_obj.is_secondary_), duplicated_(true)
+			fixed_(old_obj.fixed_), is_secondary_(old_obj.is_secondary_), duplicated_(true), old_position_(old_obj.old_position_)
 
 {
 	setMovable();
@@ -67,6 +67,8 @@ Spring::Spring(Particle* p1, Particle* p2, float k, bool is_secondary):
 			p1_(p1), p2_(p2), k_(k), is_secondary_(is_secondary)
 {
 	init_length_ = glm::length(p1_->position_ - p2_->position_);
+	max_length_ = (1 + max_deform_rate_) * init_length_;
+	min_length_ = (1 - max_deform_rate_) * init_length_;
 }
 
 void Spring::removeBendSpring() {
@@ -88,11 +90,20 @@ void Spring::computeForceQuantity() {
 	float curr_length = glm::length(p1_->position_ - p2_->position_);
 	float init_length = glm::length(p1_->init_position_ - p2_->init_position_);
 	float deform_rate = (init_length - curr_length) / init_length;
-	// float deform_rate = (init_length_ - curr_length) / init_length_;
-	if(fabs(deform_rate) > max_deform_rate_) {	// constrains. Anti-superelastic.
-		deform_rate = deform_rate * (fabs(deform_rate) / max_deform_rate_);
-	}
-	force_quantity_ = deform_rate * k_;
+	// if(fabs(deform_rate) > max_deform_rate_) {	// constrains. Anti-superelastic.
+		// deform_rate = deform_rate * fabs(deform_rate) / max_deform_rate_;
+	// }
+	force_quantity_ = deform_rate * k_ * init_length_;
+	// if(deform_rate < max_deform_rate_ && deform_rate > (-max_deform_rate_)) {
+	// 	force_quantity_ = deform_rate * k_ * init_length_;
+	// }
+	// else if(deform_rate < 0) {
+	// 	force_quantity_ = ((-max_deform_rate_) * k_ + (deform_rate + max_deform_rate_) * 5.0 * k_) * init_length;
+	// }
+	// else {
+	// 	force_quantity_ = (max_deform_rate_ * k_ + (deform_rate - max_deform_rate_) * 5.0 * k_) * init_length;
+	// }
+
 
 }
 
@@ -150,7 +161,7 @@ void Cloth::setInitAnchorNodes() {
 Cloth::Cloth(int x_size, int z_size):
 		x_size_(x_size), z_size_(z_size)
 {
-	wind_force_ = x_size_ * z_size_ * particle_mass_ * glm::vec3(0.0, 0.0, 1.0) / 10.0f;
+	wind_force_ = particle_mass_ * glm::vec3(0.0, 0.0, 1.0) * G * 2.0f;
 	// build grid
 	float total_x_width = (x_size_ - 1) * grid_width_, total_z_width = (z_size_ - 1 + 0.5) * grid_width_;
 	for(int x = 0; x < x_size_; x++) {
@@ -487,7 +498,10 @@ void Cloth::animate(float delta_t) {
 			struct_s->bend_spring_->computeForceQuantity();
 			struct_s->bend_spring_->applyForce();
 		}
+		struct_s->constrained_ = false;
 	}
+
+	// verlet(delta_t);
 
 
 	// update particle velocity and positions
@@ -503,6 +517,24 @@ void Cloth::animate(float delta_t) {
 		}
 	}
 
+	// add constraints to sping length!
+	std::queue<Particle*> start_particles;
+	for(Particle* p : particles_) {
+		if(p->fixed_) {
+			start_particles.emplace(p);
+		}
+	}
+	bfsConstrain(start_particles);	
+	for(Particle* p : particles_) {
+		if(!(*p->springs_.begin())->constrained_) {
+			start_particles = std::queue<Particle*>();
+			start_particles.emplace(p);
+			bfsConstrain(start_particles);
+		}
+	}
+
+
+
 	setCurrentSpring();
 	// std::cout << "pick ray start: " << glm::to_string(pick_ray_start) << std::endl;
 	if(picked_spring) {
@@ -514,6 +546,31 @@ void Cloth::animate(float delta_t) {
 	// std::cout << std::endl;
 	time_ += delta_t;
 }
+
+void Cloth::bfsConstrain(std::queue<Particle*>& q) {
+	// std::queue<Particle*> q;
+	// q.emplace(p_start);
+	while(!q.empty()) {
+		Particle* p = q.front();
+		q.pop();
+		for(Spring* s : p->springs_) {
+			if(s->constrained_) {
+				continue;
+			}
+			Particle* nb_p = s->p1_ == p ? s->p2_ : s->p1_;
+			float len = glm::length(p->position_ - nb_p->position_);
+			if(len > s->max_length_) {
+				nb_p->position_ = p->position_ + glm::normalize(nb_p->position_ - p->position_) * s->max_length_;
+			}
+			s->constrained_ = true;
+			q.emplace(nb_p);
+
+		}
+
+	}
+	
+}
+
 
 void Cloth::groupNeighbors(Particle* p, std::map<int, std::unordered_set<Particle*>>& groups) {
 	std::vector<Particle*> nb_particles;

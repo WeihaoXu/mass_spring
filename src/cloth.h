@@ -7,9 +7,10 @@
 #include <unordered_set>
 #include <glm/gtx/string_cast.hpp>
 #include <map>
+#include <queue>
 #include "helper_functions.h"
 
-#define G (1 * 9.8f)
+#define G (4 * 9.8f)
 #define PI 3.1416
 #define SPRING_CYLINDER_RADIUS 0.5f
 
@@ -32,6 +33,7 @@ struct Particle {
 
 	glm::vec3 position_;
 	glm::vec3 init_position_;
+	glm::vec3 old_position_;
 	glm::vec3 force_;
 	glm::vec3 velocity_;
 
@@ -77,8 +79,10 @@ struct Spring {
 	float force_quantity_;
 	float init_length_;
 	float k_;
-	float max_deform_rate_ = 0.1f;
+	float max_deform_rate_ = 0.3f;
+	float min_length_, max_length_;
 	bool is_secondary_ = false;
+	bool constrained_ = false;
 
 };
 
@@ -89,6 +93,7 @@ public:
 	~Cloth();
 	void animate(float delta_t);	// recalculate the forces, velocities and positions. Finally update cache
 	void resetCloth();
+	void bfsConstrain(std::queue<Particle*>& q);
 
 
 	// The following vectors are cache for GPU rendering.
@@ -133,11 +138,11 @@ private:
 	int x_size_, z_size_;
 	float time_ = 0.0f;
 	glm::vec3 wind_force_;
-	const float grid_width_ = 2.0;
-	const float struct_k_ = 50.0;	// spring constant of bending springs
+	const float grid_width_ = 1.0;
+	const float struct_k_ = 100.0;	// spring constant of bending springs
 	const float bend_sheer_k_ = 20.0;	// spring constant of bending springs. (there bending springs also used as sheering springs)
-	const float damper_ = 0.20;
-	const float particle_mass_ = 0.2;	// init mass of every particle.
+	const float damper_ = 0.10;
+	const float particle_mass_ = 0.1;	// init mass of every particle.
 	const float init_height_ = 0.0;		// init height of the cloth. (i.e. init z position of all particles)
 
 };

@@ -286,8 +286,9 @@ int main(int argc, char* argv[])
 			gui.clearResetFlag();
 		}
 
-		
-		float delta_t = (float) toc(timer) * gui.getTimeSpeed();
+		float delta_t = 0.02;
+
+		// float delta_t = (float) toc(timer) * gui.getTimeSpeed();
 		// delta_t *= 0.5;
 		// std::cout << "delta_t = " << delta_t << std::endl;
 		cloth.animate(delta_t);
