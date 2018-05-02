@@ -9,7 +9,7 @@
 #include <map>
 #include "helper_functions.h"
 
-#define G (4 * 9.8f)
+#define G (1 * 9.8f)
 #define PI 3.1416
 #define SPRING_CYLINDER_RADIUS 0.5f
 
@@ -64,6 +64,7 @@ struct Spring {
 	void applyForce();	// compute two force vectors, and apply them to two particles connected to the spring.
 	void replaceTriangle(Triangle* t_old, Triangle* t_new);
 	void replaceParticle(Particle* p_old, Particle* p_new);
+	void removeBendSpring();
 
 	// std::vector<Particle*> nb_particles_;	// two particles neighboring to but not owned by the spring.
 	std::vector<Triangle*> triangles_;	// a spring is neighbor to either 1 or 2 triangles.
@@ -134,7 +135,7 @@ private:
 	glm::vec3 wind_force_;
 	const float grid_width_ = 2.0;
 	const float struct_k_ = 50.0;	// spring constant of bending springs
-	const float bend_sheer_k_ = 0.0;	// spring constant of bending springs. (there bending springs also used as sheering springs)
+	const float bend_sheer_k_ = 20.0;	// spring constant of bending springs. (there bending springs also used as sheering springs)
 	const float damper_ = 0.20;
 	const float particle_mass_ = 0.2;	// init mass of every particle.
 	const float init_height_ = 0.0;		// init height of the cloth. (i.e. init z position of all particles)

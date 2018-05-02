@@ -69,6 +69,13 @@ Spring::Spring(Particle* p1, Particle* p2, float k, bool is_secondary):
 	init_length_ = glm::length(p1_->position_ - p2_->position_);
 }
 
+void Spring::removeBendSpring() {
+	if(bend_spring_ != nullptr) {
+		delete bend_spring_;
+		bend_spring_ = nullptr;
+	}
+}
+
 
 Spring::~Spring() 
 {
@@ -348,6 +355,7 @@ void Cloth::tear(Spring* s) {
 	particles_.push_back(pp2);
 	Spring* ss2 = addStructSpring(p2, pp2, struct_k_, true);
 
+
 	if(t1) {
 		Particle* nb_p1 = getNeighborParticle(t1, s);
 		Triangle* tt1 = new Triangle(nb_p1, p1, pp1);
@@ -366,6 +374,10 @@ void Cloth::tear(Spring* s) {
 
 		getStructSpring(p1, nb_p1)->replaceTriangle(t1, tt1);
 		getStructSpring(p2, nb_p1)->replaceTriangle(t1, tt2);
+
+		for(Spring* nb_p1_s : nb_p1->springs_) {
+			nb_p1_s->removeBendSpring();
+		}
 		triangles_.erase(t1);
 		delete t1;
 	}
@@ -387,6 +399,10 @@ void Cloth::tear(Spring* s) {
 		
 		getStructSpring(p1, nb_p2)->replaceTriangle(t2, tt1);
 		getStructSpring(p2, nb_p2)->replaceTriangle(t2, tt2);
+		
+		for(Spring* nb_p2_s : nb_p2->springs_) {
+			nb_p2_s->removeBendSpring();
+		}
 		triangles_.erase(t2);
 		delete t2;
 
@@ -501,6 +517,7 @@ void Cloth::animate(float delta_t) {
 
 void Cloth::groupNeighbors(Particle* p, std::map<int, std::unordered_set<Particle*>>& groups) {
 	std::vector<Particle*> nb_particles;
+	std::vector<Spring*> nb_springs;
 	for(Spring* s : p->springs_) {
 		if(s->p1_ == nullptr || s->p2_ == nullptr) {
 			std::cout << "spring has null node" << std::endl;
@@ -537,6 +554,7 @@ void Cloth::groupNeighbors(Particle* p, std::map<int, std::unordered_set<Particl
 			if(containsStructSpring(p1, p2)) {
 				// std::cout << "spring " << i << " connected to spring " << j << std::endl;
 				uf[findRoot(uf, j)] = findRoot(uf, i);
+				nb_springs.push_back(getStructSpring(p1, p2));
 			}
 		}
 	}
@@ -559,6 +577,12 @@ void Cloth::groupNeighbors(Particle* p, std::map<int, std::unordered_set<Particl
 		}
 		
 	}
+
+	if(groups.size() > 1) {
+		for(Spring* nb_s : nb_springs) {
+			nb_s->removeBendSpring();
+		}
+	}
 }
 
 int Cloth::findRoot(std::vector<int>& uf, int idx) {
@@ -571,7 +595,11 @@ int Cloth::findRoot(std::vector<int>& uf, int idx) {
 void Cloth::duplicateParticles(Particle* p, std::map<int, std::unordered_set<Particle*>>& groups, std::vector<Particle*>& new_particles) {
 	if(groups.size() <= 1) {
 		return;
-	} 
+	}
+	// for(Spring* s : p->springs_) {
+	// 	s->removeBendSpring();
+	// } 
+
 	int group_count = groups.size(); 
 	for(auto const& group : groups) {
 		if(group_count == 1) break;	// if only one group, don't need to split the origin particle
