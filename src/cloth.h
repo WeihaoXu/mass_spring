@@ -27,6 +27,7 @@ struct Particle {
 	~Particle();
 	
 	void resetForce();	// clear all forces except for gravity.
+	void resetNormals();
 	void addForce(glm::vec3 f);
 	void setFixed();
 	void setMovable();
@@ -38,8 +39,11 @@ struct Particle {
 	glm::vec3 velocity_;
 
 	glm::vec2 uv_coords_;
+	glm::vec3 vertex_normal_;
 
 	std::unordered_set<Spring*> springs_;
+	std::vector<glm::vec3> face_normals_;	// to store the face normal of triangles connected to it
+
 
 	int grid_x_, grid_z_;
 	float mass_;
@@ -55,6 +59,7 @@ struct Triangle {
 	~Triangle();
 	std::vector<Particle*> particles_;	// length == 3. Three particles.
 	float area_;
+	glm::vec3 face_normal_;
 };
 
 struct Spring {
@@ -101,6 +106,7 @@ public:
 	// The following vectors are cache for GPU rendering.
 	std::vector<glm::vec3> vertices;		// for rendering the cloth
 	std::vector<glm::vec2> cloth_uv_coords;	// for texture mapping the the future.
+	std::vector<glm::vec3> vertex_normals;
 	std::vector<glm::vec3> struct_spring_vertices;	// used to linemesh springs. For debug use. 
 	std::vector<glm::vec3> bend_spring_vertices;	// used to linemesh springs. For debug use. 
 

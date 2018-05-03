@@ -36,7 +36,6 @@ void Particle::resetForce() {
 	force_ = glm::vec3(0.0f, - 1.0 * mass_ * G, 0.0f);
 }
 
-
 void Particle::addForce(glm::vec3 f) {
 	force_ += f;
 }
@@ -327,14 +326,11 @@ Cloth::~Cloth() {
 }
 
 
-
 void Cloth::addWind() {
 	for(Triangle* t : triangles_) {
-		glm::vec3 normal = glm::normalize(glm::cross(t->particles_[1]->position_ - t->particles_[0]->position_, 
-														t->particles_[2]->position_ - t->particles_[0]->position_));
 		// glm::vec3 curr_wind_force = wind_force_ * (sin(time_ * 10.0f) * 0.5f + 0.5f);
 		glm::vec3 curr_wind_force = wind_force_;
-		glm::vec3 projected_force = glm::normalize(wind_force_) * fabs(glm::dot(normal, curr_wind_force));
+		glm::vec3 projected_force = glm::normalize(wind_force_) * fabs(glm::dot(t->face_normal_, curr_wind_force));
 		for(Particle* p : t->particles_) {
 			p->force_ += projected_force;
 		}
@@ -449,11 +445,13 @@ void Cloth::refreshCache() {
 	// vertices and uv_coords
 	vertices.clear();
 	cloth_uv_coords.clear();
+	vertex_normals.clear();
 	for(Triangle* triangle : triangles_) {
 		for(Particle* p : triangle->particles_) {
 			// std::cout << "particle pushed to cache: " << glm::to_string(p->position_) << std::endl;
 			vertices.push_back(p->position_);
 			cloth_uv_coords.push_back(p->uv_coords_);
+			vertex_normals.push_back(p->vertex_normal_);
 		}
 	}
 
@@ -546,6 +544,24 @@ void Cloth::animate(float delta_t) {
 	}
 
 
+	// particle positions determined. Compute vertex normals.
+	for(Particle* p : particles_) {
+		p->face_normals_.clear();
+	}
+	for(Triangle* t : triangles_) {
+		t->face_normal_ = glm::normalize(glm::cross(t->particles_[1]->position_ - t->particles_[0]->position_, 
+														t->particles_[2]->position_ - t->particles_[0]->position_));
+		for(Particle* p : t->particles_) {
+			p->face_normals_.push_back(t->face_normal_);
+		}
+	}
+	for(Particle* p : particles_) {
+		glm::vec3 normal_accumulate(0.0f, 0.0f, 0.0f);
+		for(glm::vec3& face_normal : p->face_normals_) {
+			normal_accumulate += face_normal;
+		}
+		p->vertex_normal_ = normal_accumulate / (1.0f * p->face_normals_.size());
+	}
 
 	setCurrentSpring();
 	// std::cout << "pick ray start: " << glm::to_string(pick_ray_start) << std::endl;

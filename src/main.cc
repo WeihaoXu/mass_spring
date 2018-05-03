@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 	// 				0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData()); /* Texture specification */
 	
 
-	glm::vec4 light_position = glm::vec4(0.0f, 100.0f, 0.0f, 1.0f);
+	glm::vec4 light_position = glm::vec4(10.0f, 2000.0f, -3000.0f, 1.0f);
 	MatrixPointers mats; // Define MatrixPointers here for lambda to capture
 	/*
 	 * In the following we are going to define several lambda functions to bind Uniforms.
@@ -222,11 +222,12 @@ int main(int argc, char* argv[])
 	RenderDataInput cloth_pass_input;
 	cloth_pass_input.assign(0, "vertex_position", cloth.vertices.data(), cloth.vertices.size(), 3, GL_FLOAT);
 	cloth_pass_input.assign(1, "uv", cloth.cloth_uv_coords.data(), cloth.cloth_uv_coords.size(), 2, GL_FLOAT);
+	cloth_pass_input.assign(2, "normal", cloth.vertex_normals.data(), cloth.vertex_normals.size(), 3, GL_FLOAT);
 	
 	RenderPass cloth_pass(-1,
 			cloth_pass_input,
 			// { cloth_vertex_shader, cloth_geom_shader, cloth_fragment_shader },
-			{ cloth_vertex_shader, nullptr, cloth_fragment_shader },
+			{ cloth_vertex_shader, cloth_geom_shader, cloth_fragment_shader },
 			{ std_model, std_view, std_proj, std_light, sampler_uniform},
 			{ "fragment_color" }
 			);
@@ -297,6 +298,7 @@ int main(int argc, char* argv[])
 			glDisable(GL_CULL_FACE);
 			cloth_pass.updateVBO(0, cloth.vertices.data(), cloth.vertices.size());
 			cloth_pass.updateVBO(1, cloth.cloth_uv_coords.data(), cloth.cloth_uv_coords.size());
+			cloth_pass.updateVBO(2, cloth.vertex_normals.data(), cloth.vertex_normals.size());
 			cloth_pass.setup();
 
 			CHECK_GL_ERROR(glDrawArrays(GL_TRIANGLES,
@@ -320,6 +322,7 @@ int main(int argc, char* argv[])
 			CHECK_GL_ERROR(glDrawArrays(GL_LINES,
 										0,
 		                              	cloth.bend_spring_vertices.size()));
+
 		}
 
 	
