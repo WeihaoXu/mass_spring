@@ -32,6 +32,10 @@ Particle::~Particle() {
 
 }
 
+void Particle::move(glm::vec3 dist) {
+	position_ += dist;
+}
+
 void Particle::resetForce() {
 	force_ = glm::vec3(0.0f, - 1.0 * mass_ * G, 0.0f);
 }
@@ -339,8 +343,8 @@ void Cloth::addWind() {
 
 void Cloth::tear(Spring* s) {
 	Particle *p1 = s->p1_, *p2 = s->p2_;	// particles of current springs.
-	std::cout << "to remove spring at " << glm::to_string(glm::vec2(p1->grid_x_, p1->grid_z_)) 
-				<< ", " << glm::to_string(glm::vec2(p2->grid_x_, p2->grid_z_)) << std::endl;
+	// std::cout << "to remove spring at " << glm::to_string(glm::vec2(p1->grid_x_, p1->grid_z_)) 
+	// 			<< ", " << glm::to_string(glm::vec2(p2->grid_x_, p2->grid_z_)) << std::endl;
 
 	Triangle *t1 = nullptr, *t2 = nullptr;	// neighboring triangles. (if any)
 	if(s->triangles_.size() >= 1) {
@@ -564,12 +568,16 @@ void Cloth::animate(float delta_t) {
 	}
 
 	setCurrentSpring();
+	setCurrentParticle();
 	// std::cout << "pick ray start: " << glm::to_string(pick_ray_start) << std::endl;
-	if(picked_spring) {
-		if(to_tear && !picked_spring->is_secondary_) {
-			tear(picked_spring);
+	if(picked_spring_) {
+		if(to_tear && !picked_spring_->is_secondary_) {
+			tear(picked_spring_);
 		}
 	}
+	// if(picked_particle_) {
+	// 	// std::cout << "particle at position" << glm::to_string(picked_particle_->position_) << std::endl;
+	// }
 	refreshCache();
 	// std::cout << std::endl;
 	time_ += delta_t;
@@ -708,7 +716,7 @@ void Cloth::duplicateParticles(Particle* p, std::map<int, std::unordered_set<Par
 			for(Triangle* t : s->triangles_) {	// replace the particle in old triangles. At most two triangles
 				for(int p_idx = 0; p_idx < t->particles_.size(); p_idx++) {
 					if(t->particles_[p_idx] == p) {
-						std::cout << "triangle particle replaced by new particle" << std::endl;
+						// std::cout << "triangle particle replaced by new particle" << std::endl;
 						t->particles_[p_idx] = p_copy;
 					}
 				}
@@ -723,15 +731,28 @@ void Cloth::duplicateParticles(Particle* p, std::map<int, std::unordered_set<Par
 
 
 void Cloth::setCurrentSpring() {
-	picked_spring = nullptr;
+	picked_spring_ = nullptr;
 	float min_distance = std::numeric_limits<float>::max();
 	for(Spring* s : springs_) {	// iterate all springs, and find the one with min distance
 		float curr_distance = line_segment_distance(pick_ray_start, pick_ray_end, s->p1_->position_, s->p2_->position_);
 		if(curr_distance < SPRING_CYLINDER_RADIUS && curr_distance < min_distance) {
 			min_distance = curr_distance;
-			picked_spring = s;
+			picked_spring_ = s;
 		}
 	}
+}
+
+void Cloth::setCurrentParticle() {
+	picked_particle_ = nullptr;
+	float min_distance = std::numeric_limits<float>::max();
+	for(Particle* p : particles_) {
+		float curr_distance = line_point_distance(pick_ray_start, pick_ray_end, p->position_);
+		if((curr_distance < PARTICLE_RADIUS) && (curr_distance < min_distance)) {
+			min_distance = curr_distance;
+			picked_particle_ = p;
+		}
+	}
+	// std::cout << "particle min distance: " << min_distance << std::endl;
 }
 
 
@@ -776,9 +797,6 @@ void Cloth::removeStructSpring(Spring* s) {
 	spring_map_[s->p2_][s->p1_] = nullptr;
 	delete s;
 }
-
-
-
 
 
 

@@ -283,7 +283,6 @@ int main(int argc, char* argv[])
 			gui.clearResetFlag();
 		}
 
-		
 
 		
 		float delta_t = (float) toc(timer) * gui.getTimeSpeed();

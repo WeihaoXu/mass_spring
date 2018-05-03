@@ -6,7 +6,7 @@
 #include <GLFW/glfw3.h>
 #include "cloth.h"
 
-#define PICK_RAY_LEN 1000.0f
+#define PICK_RAY_LEN 200.0f
 
 struct Mesh;
 
@@ -49,7 +49,7 @@ public:
 	void toggleDrawSpring() {enable_draw_spring_ = !enable_draw_spring_;}
 
 	float getWindFactor() {return wind_factor_;}
-
+	
 	float getTimeSpeed() {return time_speed_;}
 	
 
@@ -73,6 +73,7 @@ private:
 
 	float wind_factor_ = 1.0f;
 
+	bool control_pressed_ = false;
 	bool drag_state_ = false;
 	bool fps_mode_ = false;
 	bool pose_changed_ = true;
@@ -102,7 +103,6 @@ private:
 	glm::mat4 model_matrix_ = glm::mat4(1.0f);
 
 	bool captureWASDUPDOWN(int key, int action);
-
+	
 };
-
 #endif

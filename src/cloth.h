@@ -13,6 +13,7 @@
 #define G (4 * 9.8f)
 #define PI 3.1416
 #define SPRING_CYLINDER_RADIUS 0.5f
+#define PARTICLE_RADIUS 0.3f
 
 
 
@@ -31,6 +32,7 @@ struct Particle {
 	void addForce(glm::vec3 f);
 	void setFixed();
 	void setMovable();
+	void move(glm::vec3 dist);
 
 	glm::vec3 position_;
 	glm::vec3 init_position_;
@@ -99,9 +101,7 @@ public:
 	void adjustWindForce(float wind_factor_);
 	void resetCloth();
 	void animate(float delta_t);	// recalculate the forces, velocities and positions. Finally update cache
-	
-	
-
+	Particle* getCurrentParticle() {return picked_particle_;}
 
 	// The following vectors are cache for GPU rendering.
 	std::vector<glm::vec3> vertices;		// for rendering the cloth
@@ -129,6 +129,7 @@ private:
 	void removeStructSpring(Spring* s);
 
 	void setCurrentSpring();
+	void setCurrentParticle();
 
 	void groupNeighbors(Particle* p, std::map<int, std::unordered_set<Particle*>>& groups);
 	void duplicateParticles(Particle* p, std::map<int, std::unordered_set<Particle*>>& groups, std::vector<Particle*>& new_particles);
@@ -144,7 +145,9 @@ private:
 	std::unordered_set<Spring*> springs_;		//stored in a hashset for constant time access, modify and delete
 	std::map<Particle*, std::map<Particle*, Spring*>> spring_map_; // key: particle pairs. Value: springs.
 
-	Spring* picked_spring = nullptr;
+	Spring* picked_spring_ = nullptr;
+	Particle* picked_particle_ = nullptr;
+
 	int x_size_, z_size_;
 	float time_ = 0.0f;
 	glm::vec3 wind_force_;
