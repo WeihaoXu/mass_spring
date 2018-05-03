@@ -37,8 +37,19 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 		return ;
 	}
 	if (key == GLFW_KEY_J && action == GLFW_RELEASE) {
-		//FIXME save out a screenshot using SaveJPEG
+		toggleDrawSpring();
 	}
+
+	if (key == GLFW_KEY_K && action == GLFW_RELEASE) {
+		toggleDrawCloth();
+	}
+	if (key == GLFW_KEY_MINUS && action != GLFW_RELEASE) {
+		wind_factor_ /= 1.1f;
+	}
+	if (key == GLFW_KEY_EQUAL && action != GLFW_RELEASE) {
+		wind_factor_ *= 1.1f;
+	}
+
 
 	if (captureWASDUPDOWN(key, action))
 		return ;

@@ -42,7 +42,16 @@ public:
 	bool toResetSystem() {return reset_ms_system_;}
 	void clearResetFlag() {reset_ms_system_ = false;}
 
+	bool drawClothEnabled() {return enable_draw_cloth_;}
+	void toggleDrawCloth() {enable_draw_cloth_ = !enable_draw_cloth_;}
+
+	bool drawSpringEnabled() {return enable_draw_spring_;}
+	void toggleDrawSpring() {enable_draw_spring_ = !enable_draw_spring_;}
+
+	float getWindFactor() {return wind_factor_;}
+
 	float getTimeSpeed() {return time_speed_;}
+	
 
 	const float* getLightPositionPtr() const { return &light_position_[0]; }
 	
@@ -59,7 +68,10 @@ private:
 	int window_width_, window_height_;
 
 	bool reset_ms_system_ = false;
-	
+	bool enable_draw_cloth_ = true;
+	bool enable_draw_spring_ = true;
+
+	float wind_factor_ = 1.0f;
 
 	bool drag_state_ = false;
 	bool fps_mode_ = false;

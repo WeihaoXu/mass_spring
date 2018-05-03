@@ -91,9 +91,11 @@ class Cloth {
 public:
 	Cloth(int x_size, int z_size);
 	~Cloth();
-	void animate(float delta_t);	// recalculate the forces, velocities and positions. Finally update cache
+	void adjustWindForce(float wind_factor_);
 	void resetCloth();
-	void bfsConstrain(std::queue<Particle*>& q);
+	void animate(float delta_t);	// recalculate the forces, velocities and positions. Finally update cache
+	
+	
 
 
 	// The following vectors are cache for GPU rendering.
@@ -128,6 +130,8 @@ private:
 	int findRoot(std::vector<int>& uf, int idx);	// a helper function for union-find algorithm
 	void addWind();
 
+	void bfsConstrain(std::queue<Particle*>& q);
+
 
 	std::vector<Particle*> particles_;
 	std::unordered_set<Triangle*> triangles_;	//stored in a hashset for constant time access, modify and delete
@@ -138,10 +142,11 @@ private:
 	int x_size_, z_size_;
 	float time_ = 0.0f;
 	glm::vec3 wind_force_;
+	glm::vec3 base_wind_force_;
 	const float grid_width_ = 1.0;
 	const float struct_k_ = 100.0;	// spring constant of bending springs
 	const float bend_sheer_k_ = 20.0;	// spring constant of bending springs. (there bending springs also used as sheering springs)
-	const float damper_ = 0.10;
+	const float damper_ = 0.30;
 	const float particle_mass_ = 0.1;	// init mass of every particle.
 	const float init_height_ = 0.0;		// init height of the cloth. (i.e. init z position of all particles)
 

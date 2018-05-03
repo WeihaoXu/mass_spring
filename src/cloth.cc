@@ -145,14 +145,19 @@ void Cloth::resetCloth() {
 }
 
 void Cloth::setInitAnchorNodes() {
-	// particles_[getParticleIdx(0, 0)]->setFixed();								//(0, 0)
-	// particles_[getParticleIdx(0, z_size_ - 1)]->setFixed();						//(0, 1)
-	// particles_[getParticleIdx(x_size_ - 1, 0)]->setFixed();						//(1, 0)
-	// particles_[getParticleIdx(x_size_ - 1, z_size_ - 1)]->setFixed();			//(1, 1)
+	particles_[getParticleIdx(0, 0)]->setFixed();								//(0, 0)
+	particles_[getParticleIdx(0, z_size_ - 1)]->setFixed();						//(0, 1)
+	particles_[getParticleIdx(x_size_ - 1, 0)]->setFixed();						//(1, 0)
+	particles_[getParticleIdx(x_size_ - 1, z_size_ - 1)]->setFixed();			//(1, 1)
 
-	for(int x = 0; x < x_size_; x++) {
-		particles_[getParticleIdx(x, 0)]->setFixed();
-	}
+	// for(int x = 0; x < x_size_; x++) {
+	// 	particles_[getParticleIdx(x, 0)]->setFixed();
+	// 	particles_[getParticleIdx(x, z_size_ - 1)]->setFixed();
+	// }
+	// for(int z = 0; z < z_size_; z++) {
+	// 	particles_[getParticleIdx(0, z)]->setFixed();
+	// 	particles_[getParticleIdx(x_size_ - 1, z)]->setFixed();
+	// }
 
 	// particles_[getParticleIdx(x_size_ / 2 - 1, 0)]->setFixed();
 	// particles_[getParticleIdx(x_size_ / 2 - 1, z_size_ - 1)]->setFixed();
@@ -161,7 +166,8 @@ void Cloth::setInitAnchorNodes() {
 Cloth::Cloth(int x_size, int z_size):
 		x_size_(x_size), z_size_(z_size)
 {
-	wind_force_ = particle_mass_ * glm::vec3(0.0, 0.0, 1.0) * G * 2.0f;
+	base_wind_force_ = particle_mass_ * glm::vec3(0.0, 0.0, 1.0) * G * 1.0f;
+	wind_force_ = base_wind_force_;
 	// build grid
 	float total_x_width = (x_size_ - 1) * grid_width_, total_z_width = (z_size_ - 1 + 0.5) * grid_width_;
 	for(int x = 0; x < x_size_; x++) {
@@ -326,9 +332,11 @@ void Cloth::addWind() {
 	for(Triangle* t : triangles_) {
 		glm::vec3 normal = glm::normalize(glm::cross(t->particles_[1]->position_ - t->particles_[0]->position_, 
 														t->particles_[2]->position_ - t->particles_[0]->position_));
-		glm::vec3 force = fabs(glm::dot(normal, glm::normalize(wind_force_))) * wind_force_ * (sin(time_ * 10.0f) * 0.5f + 0.5f);
+		// glm::vec3 curr_wind_force = wind_force_ * (sin(time_ * 10.0f) * 0.5f + 0.5f);
+		glm::vec3 curr_wind_force = wind_force_;
+		glm::vec3 projected_force = glm::normalize(wind_force_) * fabs(glm::dot(normal, curr_wind_force));
 		for(Particle* p : t->particles_) {
-			p->force_ += force;
+			p->force_ += projected_force;
 		}
 	}
 }
@@ -430,6 +438,10 @@ Particle* Cloth::getNeighborParticle(Triangle* t1, Spring* s) {
 	std::cout << "get neighbor particle function correctly!" << std::endl;
 	throw("get neighbor particle function correctly!");
 	return nullptr;
+}
+
+void Cloth::adjustWindForce(float wind_factor_) {
+	wind_force_ = base_wind_force_ * wind_factor_;
 }
 
 

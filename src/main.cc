@@ -253,10 +253,6 @@ int main(int argc, char* argv[])
 			{ "fragment_color" }
 			);
 
-	
-	bool draw_cloth = true;
-	bool draw_struct_spring = true;
-	bool draw_bend_spring = true;
 
 	toc(timer);
 	while (!glfwWindowShouldClose(window)) {
@@ -286,16 +282,18 @@ int main(int argc, char* argv[])
 			gui.clearResetFlag();
 		}
 
-		float delta_t = 0.02;
+		
 
-		// float delta_t = (float) toc(timer) * gui.getTimeSpeed();
-		// delta_t *= 0.5;
+		
+		float delta_t = (float) toc(timer) * gui.getTimeSpeed();
 		// std::cout << "delta_t = " << delta_t << std::endl;
+
+		cloth.adjustWindForce(gui.getWindFactor());
 		cloth.animate(delta_t);
 		
 
 
-		if (draw_cloth) {
+		if (gui.drawClothEnabled()) {
 			glDisable(GL_CULL_FACE);
 			cloth_pass.updateVBO(0, cloth.vertices.data(), cloth.vertices.size());
 			cloth_pass.updateVBO(1, cloth.cloth_uv_coords.data(), cloth.cloth_uv_coords.size());
@@ -306,16 +304,16 @@ int main(int argc, char* argv[])
 		                              	cloth.vertices.size()));
 		}
 
-		if (draw_struct_spring) {
+		if (gui.drawSpringEnabled()) {
+			// struct spring
 			struct_spring_pass.updateVBO(0, cloth.struct_spring_vertices.data(), cloth.struct_spring_vertices.size());
 			struct_spring_pass.setup();
 
 			CHECK_GL_ERROR(glDrawArrays(GL_LINES,
 										0,
 		                              	cloth.struct_spring_vertices.size()));
-		}
 
-		if (draw_bend_spring) {
+			// bend spring
 			bend_spring_pass.updateVBO(0, cloth.bend_spring_vertices.data(), cloth.bend_spring_vertices.size());
 			bend_spring_pass.setup();
 
@@ -323,6 +321,10 @@ int main(int argc, char* argv[])
 										0,
 		                              	cloth.bend_spring_vertices.size()));
 		}
+
+	
+
+		
 
 
 
