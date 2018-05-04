@@ -366,18 +366,8 @@ void Particle::particleCollisionWithSphere(glm::vec3 sphere_position, float sphe
 	    if(penDist < 0)
 	    {
 	        position_.x += dist_to_change.x;
-	        if(dist.x > 0){
-	        	position_.x -= kSphereEps;
-	        } else {
-	        	position_.x += kSphereEps;
-	        }
 	        position_.y += dist_to_change.y;
-	        if(dist.y > 0){
-	        	position_.y -= kSphereEps;
-	        } else {
-	        	position_.y += kSphereEps;
-	        }
-	        position_.z += dist_to_change.z + (kSphereEps * sphere_oscillation_direction);
+	        position_.z += dist_to_change.z;
 	        velocity_ = glm::vec3(0.0f);
 	        force_ = glm::vec3(0.0f);
 	    }
