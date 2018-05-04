@@ -1,7 +1,9 @@
 #include "helper_functions.h"
 #include "config.h"
 #include <glm/glm.hpp>
-
+#include <math.h>
+#include <iostream>
+#include <glm/gtx/string_cast.hpp>
 
 // Compute minimum distance between two line segments. Reference: http://geomalgorithms.com/a07-_distance.html
 //    Input:  start and end points of two line segments
@@ -87,4 +89,18 @@ void create_floor(std::vector<glm::vec4>& floor_vertices, std::vector<glm::uvec3
     floor_vertices.push_back(glm::vec4(kFloorXMin, kFloorY, kFloorZMin, 1.0f));
     floor_faces.push_back(glm::uvec3(0, 1, 2));
     floor_faces.push_back(glm::uvec3(2, 3, 0));
+}
+
+float line_point_distance(glm::vec3& line_start, glm::vec3& line_end, glm::vec3& point) {
+    // std::cout << "start: " << glm::to_string(line_start) << ", end: " << glm::to_string(line_end) << std::endl;
+    glm::vec3 sp = point - line_start;
+    glm::vec3 se = line_end - line_start;
+    float prj_len = glm::dot(glm::normalize(sp), glm::normalize(se)) * glm::length(sp);
+    float sp_len = glm::length(sp);
+
+    // std::cout << "len1: " << prj_len << ", len2: " << sp_len << std::endl;
+
+    float res = sqrt(sp_len * sp_len - prj_len * prj_len);
+    // std::cout << "line point distance: " << res << std::endl;
+    return res;
 }

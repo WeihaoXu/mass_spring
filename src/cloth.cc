@@ -33,6 +33,10 @@ Particle::~Particle() {
 
 }
 
+void Particle::move(glm::vec3 dist) {
+	position_ += dist;
+}
+
 void Particle::resetForce() {
 	force_ = glm::vec3(0.0f, - 1.0 * mass_ * G, 0.0f);
 }
@@ -146,9 +150,9 @@ void Cloth::resetCloth() {
 
 void Cloth::setInitAnchorNodes() {
 	particles_[getParticleIdx(0, 0)]->setFixed();								//(0, 0)
-	particles_[getParticleIdx(0, z_size_ - 1)]->setFixed();						//(0, 1)
+	// particles_[getParticleIdx(0, z_size_ - 1)]->setFixed();						//(0, 1)
 	particles_[getParticleIdx(x_size_ - 1, 0)]->setFixed();						//(1, 0)
-	particles_[getParticleIdx(x_size_ - 1, z_size_ - 1)]->setFixed();			//(1, 1)
+	// particles_[getParticleIdx(x_size_ - 1, z_size_ - 1)]->setFixed();			//(1, 1)
 
 	// for(int x = 0; x < x_size_; x++) {
 	// 	particles_[getParticleIdx(x, 0)]->setFixed();
@@ -165,9 +169,14 @@ void Cloth::setInitAnchorNodes() {
 
 Cloth::Cloth(int x_size, int z_size):
 		x_size_(x_size), z_size_(z_size)
-{
-	base_wind_force_ = particle_mass_ * glm::vec3(0.0, 0.0, 1.0) * G * 1.0f;
-	wind_force_ = base_wind_force_;
+{	
+	// init wind directions
+	wind_directions_.push_back(glm::vec3(0.0f, 0.0f, 1.0f));
+	wind_directions_.push_back(glm::vec3(0.0f, 0.0f, -1.0f));
+	wind_directions_.push_back(glm::vec3(1.0f, 0.0f, 0.0f));
+	wind_directions_.push_back(glm::vec3(-1.0f, 0.0f, 0.0f));
+
+
 	// build grid
 	float total_x_width = (x_size_ - 1) * grid_width_, total_z_width = (z_size_ - 1 + 0.5) * grid_width_;
 	for(int x = 0; x < x_size_; x++) {
@@ -340,9 +349,10 @@ void Cloth::collisionWithFloor(){
 
 void Cloth::addWind() {
 	for(Triangle* t : triangles_) {
-		// glm::vec3 curr_wind_force = wind_force_ * (sin(time_ * 10.0f) * 0.5f + 0.5f);
-		glm::vec3 curr_wind_force = wind_force_;
-		glm::vec3 projected_force = glm::normalize(wind_force_) * fabs(glm::dot(t->face_normal_, curr_wind_force));
+		glm::vec3 wind_force_amp = wind_directions_[wind_idx_] * wind_force_quantity_ * wind_factor_; 
+		glm::vec3 curr_wind_force = wind_force_amp * (sin(time_ * 10.0f) * 0.5f + 0.5f);
+		// glm::vec3 curr_wind_force = wind_force_;
+		glm::vec3 projected_force = wind_directions_[wind_idx_] * fabs(glm::dot(t->face_normal_, curr_wind_force));
 		for(Particle* p : t->particles_) {
 			p->force_ += projected_force;
 		}
@@ -351,8 +361,8 @@ void Cloth::addWind() {
 
 void Cloth::tear(Spring* s) {
 	Particle *p1 = s->p1_, *p2 = s->p2_;	// particles of current springs.
-	std::cout << "to remove spring at " << glm::to_string(glm::vec2(p1->grid_x_, p1->grid_z_)) 
-				<< ", " << glm::to_string(glm::vec2(p2->grid_x_, p2->grid_z_)) << std::endl;
+	// std::cout << "to remove spring at " << glm::to_string(glm::vec2(p1->grid_x_, p1->grid_z_)) 
+	// 			<< ", " << glm::to_string(glm::vec2(p2->grid_x_, p2->grid_z_)) << std::endl;
 
 	Triangle *t1 = nullptr, *t2 = nullptr;	// neighboring triangles. (if any)
 	if(s->triangles_.size() >= 1) {
@@ -448,8 +458,12 @@ Particle* Cloth::getNeighborParticle(Triangle* t1, Spring* s) {
 	return nullptr;
 }
 
-void Cloth::adjustWindForce(float wind_factor_) {
-	wind_force_ = base_wind_force_ * wind_factor_;
+void Cloth::adjustWindForce(float wind_factor) {
+	this->wind_factor_ = wind_factor;
+}
+
+void Cloth::toggleWindDirect() {
+	wind_idx_ = (wind_idx_ + 1) % wind_directions_.size();
 }
 
 
@@ -577,12 +591,16 @@ void Cloth::animate(float delta_t) {
 	}
 
 	setCurrentSpring();
+	setCurrentParticle();
 	// std::cout << "pick ray start: " << glm::to_string(pick_ray_start) << std::endl;
-	if(picked_spring) {
-		if(to_tear && !picked_spring->is_secondary_) {
-			tear(picked_spring);
+	if(picked_spring_) {
+		if(to_tear && !picked_spring_->is_secondary_) {
+			tear(picked_spring_);
 		}
 	}
+	// if(picked_particle_) {
+	// 	// std::cout << "particle at position" << glm::to_string(picked_particle_->position_) << std::endl;
+	// }
 	refreshCache();
 	// std::cout << std::endl;
 	time_ += delta_t;
@@ -721,7 +739,7 @@ void Cloth::duplicateParticles(Particle* p, std::map<int, std::unordered_set<Par
 			for(Triangle* t : s->triangles_) {	// replace the particle in old triangles. At most two triangles
 				for(int p_idx = 0; p_idx < t->particles_.size(); p_idx++) {
 					if(t->particles_[p_idx] == p) {
-						std::cout << "triangle particle replaced by new particle" << std::endl;
+						// std::cout << "triangle particle replaced by new particle" << std::endl;
 						t->particles_[p_idx] = p_copy;
 					}
 				}
@@ -736,15 +754,28 @@ void Cloth::duplicateParticles(Particle* p, std::map<int, std::unordered_set<Par
 
 
 void Cloth::setCurrentSpring() {
-	picked_spring = nullptr;
+	picked_spring_ = nullptr;
 	float min_distance = std::numeric_limits<float>::max();
 	for(Spring* s : springs_) {	// iterate all springs, and find the one with min distance
 		float curr_distance = line_segment_distance(pick_ray_start, pick_ray_end, s->p1_->position_, s->p2_->position_);
 		if(curr_distance < SPRING_CYLINDER_RADIUS && curr_distance < min_distance) {
 			min_distance = curr_distance;
-			picked_spring = s;
+			picked_spring_ = s;
 		}
 	}
+}
+
+void Cloth::setCurrentParticle() {
+	picked_particle_ = nullptr;
+	float min_distance = std::numeric_limits<float>::max();
+	for(Particle* p : particles_) {
+		float curr_distance = line_point_distance(pick_ray_start, pick_ray_end, p->position_);
+		if((curr_distance < PARTICLE_RADIUS) && (curr_distance < min_distance)) {
+			min_distance = curr_distance;
+			picked_particle_ = p;
+		}
+	}
+	// std::cout << "particle min distance: " << min_distance << std::endl;
 }
 
 
@@ -789,9 +820,6 @@ void Cloth::removeStructSpring(Spring* s) {
 	spring_map_[s->p2_][s->p1_] = nullptr;
 	delete s;
 }
-
-
-
 
 
 

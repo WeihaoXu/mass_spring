@@ -45,9 +45,19 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 	}
 	if (key == GLFW_KEY_MINUS && action != GLFW_RELEASE) {
 		wind_factor_ /= 1.1f;
+		wind_factor_ = std::max(wind_factor_, 0.5f);
 	}
 	if (key == GLFW_KEY_EQUAL && action != GLFW_RELEASE) {
 		wind_factor_ *= 1.1f;
+		wind_factor_ = std::min(wind_factor_, 1.5f);
+	}
+	if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL) {
+		if(action == GLFW_PRESS) {
+			control_pressed_ = true;
+		}
+		else {
+			control_pressed_ = false;
+		}
 	}
 
 
@@ -71,7 +81,7 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 	} else if (key == GLFW_KEY_R && action != GLFW_RELEASE) {
 		reset_ms_system_ = true;
 	} else if (key == GLFW_KEY_P && action != GLFW_RELEASE) {
-	
+		to_toggle_wind_direct_ = true;
 	}
 }
 
@@ -91,7 +101,8 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	glm::uvec4 viewport = glm::uvec4(0, 0, window_width_, window_height_);
 
 	bool drag_camera = drag_state_ && current_button_ == GLFW_MOUSE_BUTTON_RIGHT;
-
+	bool tear_particle = (!control_pressed_) && drag_state_ && current_button_ == GLFW_MOUSE_BUTTON_LEFT;
+	bool drag_particle = control_pressed_ && drag_state_ && current_button_ == GLFW_MOUSE_BUTTON_LEFT;
 
 	if (drag_camera) {
 		glm::vec3 axis = glm::normalize(
@@ -120,12 +131,31 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 		cloth_->pick_ray_end = pick_ray_end;
 	}
 
-	if(drag_state_ && current_button_ == GLFW_MOUSE_BUTTON_LEFT) {
+
+	if(tear_particle) {
 		cloth_->to_tear = true;
 	}
 	else {
 		cloth_->to_tear = false;
 	}
+
+	if(drag_particle) {
+		glm::vec3 mouse_pos = glm::unProject(glm::vec3(current_x_, current_y_, 1.0f),
+											view_matrix_,
+											projection_matrix_,
+											viewport);
+		glm::vec3 last_mouse_pos_ = glm::unProject(glm::vec3(last_x_, last_y_, 1.0f),
+											view_matrix_,
+											projection_matrix_,
+											viewport);	
+
+		glm::vec3 darg_dist = mouse_pos - last_mouse_pos_;
+		Particle* p = cloth_->getCurrentParticle();
+		if(p) {
+			p->move(darg_dist);
+		}
+	}
+
 	
 }
 
@@ -206,6 +236,9 @@ bool GUI::captureWASDUPDOWN(int key, int action)
 	return false;
 }
 
+void dragParticle() {
+
+}
 
 // Delegrate to the actual GUI object.
 void GUI::KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
