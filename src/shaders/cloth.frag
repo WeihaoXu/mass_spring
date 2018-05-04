@@ -33,8 +33,7 @@ void main() {
 	fragment_color = vec4(texcolor.rgb, 1.0);
 	*/
 
-	
-	vec3 texcolor = texture(sampler, uv_coords).xyz;
+	vec3 texcolor = texture(sampler, vec2(uv_coords[0] + 0.4, uv_coords[1])).xyz;
 	// float dot_nl = dot(normalize(light_direction), normalize(face_normal));
 	float dot_nl = dot(normalize(light_direction), normalize(vec4(vertex_normal, 0.0)));
 
