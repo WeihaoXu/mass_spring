@@ -4,6 +4,7 @@
 #include <math.h>
 #include <iostream>
 #include <glm/gtx/string_cast.hpp>
+#include <GL/glew.h>
 
 // Compute minimum distance between two line segments. Reference: http://geomalgorithms.com/a07-_distance.html
 //    Input:  start and end points of two line segments
@@ -103,4 +104,41 @@ float line_point_distance(glm::vec3& line_start, glm::vec3& line_end, glm::vec3&
     float res = sqrt(sp_len * sp_len - prj_len * prj_len);
     // std::cout << "line point distance: " << res << std::endl;
     return res;
+}
+
+void create_sphere(std::vector<glm::vec3>& sphere_vertex, std::vector<glm::vec3>& sphere_normal, std::vector<glm::uvec3>& sphere_indices){
+    const int na=36;        // vertex grid size
+    const int nb=18;
+    GLfloat x,y,z,a,b,da,db,r=3.5;
+    int ia,ib,ix,iy;
+    da=2.0*M_PI/GLfloat(na);
+    db=    M_PI/GLfloat(nb-1);
+    // [Generate sphere point data]
+    // spherical angles a,b covering whole sphere surface
+    for (ix=0,b=-0.5*M_PI,ib=0;ib<nb;ib++,b+=db){
+        for (a=0.0,ia=0;ia<na;ia++,a+=da,ix+=3){
+            // unit sphere
+            x=cos(b)*cos(a);
+            y=cos(b)*sin(a);
+            z=sin(b);
+            glm::vec3 position = glm::vec3(x*r, y*r, z*r);
+            glm::vec3 norm = glm::vec3(x, y, z);
+            sphere_vertex.push_back(position);
+            sphere_normal.push_back(norm);
+        }
+    }
+    // [Generate GL_TRIANGLE indices]
+    for (ix=0,iy=0,ib=1;ib<nb;ib++) {
+        for (ia=1;ia<na;ia++,iy++){
+            // first half of QUAD
+            sphere_indices.push_back(glm::vec3(iy, iy+1,iy+na));
+            // second half of QUAD
+            sphere_indices.push_back(glm::vec3(iy+na, iy+1,iy+na+1));
+        }
+        // first half of QUAD
+        sphere_indices.push_back(glm::vec3(iy, iy+1-na,iy+na));
+        // second half of QUAD
+        sphere_indices.push_back(glm::vec3(iy+na, iy+1-na,iy+1));
+        iy++;
+    }
 }

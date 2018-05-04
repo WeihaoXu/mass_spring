@@ -13,4 +13,6 @@ float line_segment_distance(const glm::vec3& line1_start, const glm::vec3& line1
 void create_floor(std::vector<glm::vec4>& floor_vertices, std::vector<glm::uvec3>& floor_faces);
 float line_point_distance(glm::vec3& line_start, glm::vec3& line_end, glm::vec3& point);
 
+void create_sphere(std::vector<glm::vec3>& sphere_vertex, std::vector<glm::vec3>& sphere_normal, std::vector<glm::uvec3>& sphere_indices);
+
 #endif
