@@ -73,6 +73,15 @@ const char* bend_spring_fragment_shader =
 const char* floor_fragment_shader =
 #include "shaders/floor.frag"
 ;
+
+const char* sphere_fragment_shader =
+#include "shaders/sphere.frag"
+;
+
+const char* sphere_vertex_shader =
+#include "shaders/sphere.vert"
+;
+
 // FIXME: Add more shaders here.
 
 void ErrorCallback(int error, const char* description) {
@@ -283,12 +292,12 @@ int main(int argc, char* argv[])
 
 
 	RenderDataInput sphere_pass_input;
-	sphere_pass_input.assign(0, "vertex_position", sphere_vertex.data(), sphere_vertex.size(), 4, GL_FLOAT);
+	sphere_pass_input.assign(0, "vertex_position", sphere_vertex.data(), sphere_vertex.size(), 3, GL_FLOAT);
 	sphere_pass_input.assignIndex(sphere_indices.data(), sphere_indices.size(), 3);
 	RenderPass sphere_pass(-1,
 			sphere_pass_input,
-			{ spring_vertex_shader, nullptr, spring_fragment_shader},
-			{ floor_model, std_view, std_proj, std_light },
+			{ sphere_vertex_shader, nullptr, sphere_fragment_shader},
+			{ std_model, std_view, std_proj, std_light },
 			{ "fragment_color" }
 			);
 

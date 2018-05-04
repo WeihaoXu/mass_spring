@@ -340,10 +340,26 @@ void Cloth::collisionWithFloor(){
 		if(p->position_.y < kFloorY){
 			// std::cout << "FLOOR HIT ME\n";
 			p->position_.y = kFloorY + kFloorEps;
-			p->setFixed();
-			// p->velocity_ = glm::vec3(0.0f);
+			// p->setFixed();
+			p->velocity_ = glm::vec3(0.0f);
 			// p->force_ = glm::vec3(0.0f);
 		}
+
+		glm::vec3 spherePosition = glm::vec3(10.0f, -20.0f, 5.0f);
+	    glm::vec3 dist = - p->position_ + spherePosition;
+
+	    // float penDist = fabs(p->position_.y + 20.0f) - kSphereRadius;
+	   	float penDist = glm::length(dist) - (kSphereRadius+kSphereEps);
+	    dist = glm::normalize(dist);
+		dist = dist * penDist;    
+
+	    if(penDist < kSphereEps)
+	    {
+	        p->position_.x += dist.x+kSphereEps;
+	        p->position_.y += dist.y+kSphereEps;
+	        p->position_.z += dist.z+kSphereEps;
+	        p->velocity_ = glm::vec3(0.0f);
+	    }
 	}
 }
 
