@@ -33,6 +33,7 @@ struct Particle {
 	void setFixed();
 	void setMovable();
 	void move(glm::vec3 dist);
+	void particleCollisionWithSphere(glm::vec3 sphere_position, float sphere_oscillation_direction);
 
 	glm::vec3 position_;
 	glm::vec3 init_position_;
@@ -116,6 +117,7 @@ public:
 	bool to_tear = false;
 	bool enable_wind = false;
 	bool enable_sphere = true;
+	bool pause_sphere = false;
 
 	const glm::vec3& getSpherePosition() const { return sphere_position; }
 private:
@@ -125,6 +127,7 @@ private:
 	void setInitAnchorNodes();
 	void tear(Spring* s);
 	void collisionWithFloor();
+	void collisionWithSphere();
 	Particle* getNeighborParticle(Triangle* t1, Spring* s);
 	bool containsStructSpring(Particle* p1, Particle* p2);
 	Spring* addStructSpring(Particle* p1, Particle* p2, float k, bool is_secondary);
@@ -160,8 +163,8 @@ private:
 	std::vector<glm::vec3> wind_directions_;
 	int wind_idx_ = 0;
 
-	float sphere_oscillation_delta = 1.0f;
-	glm::vec3 sphere_position = glm::vec3(10.0f, -15.0f, 5.0f);
+	float sphere_oscillation_direction = 1.0f;
+	glm::vec3 sphere_position = glm::vec3(10.0f, -18.0f, 10.0f);
 
 	const float grid_width_ = 1.0;
 	const float struct_k_ = 100.0;	// spring constant of bending springs

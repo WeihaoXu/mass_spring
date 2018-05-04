@@ -343,31 +343,52 @@ void Cloth::collisionWithFloor(){
 			// p->setFixed();
 			p->velocity_ = glm::vec3(0.0f);
 		}
+	}
+}
 
-		if(enable_sphere){
-		    glm::vec3 dist = - p->position_ + sphere_position;
-		   	float penDist = glm::length(dist) - (kSphereRadius+kSphereEps);
-		    dist = glm::normalize(dist);
-			dist = dist * penDist;    
-
-		    if(penDist < 0) //kSphereEps)
-		    {
-		        p->position_.x += dist.x+kSphereEps;
-		        p->position_.y += dist.y+kSphereEps;
-		        p->position_.z += dist.z+kSphereEps;
-		        // std::cout << glm::to_string(p->force_) << "\n";
-		        p->velocity_ = glm::vec3(0.0f);
-		    }
+void Cloth::collisionWithSphere(){
+	for(Spring* s: springs_){
+		s->p1_->particleCollisionWithSphere(sphere_position, sphere_oscillation_direction);
+		s->p2_->particleCollisionWithSphere(sphere_position, sphere_oscillation_direction);
+		if(s->bend_spring_ != nullptr){
+			s->bend_spring_->p1_->particleCollisionWithSphere(sphere_position, sphere_oscillation_direction);
+			s->bend_spring_->p2_->particleCollisionWithSphere(sphere_position, sphere_oscillation_direction);
 		}
 	}
 }
 
+void Particle::particleCollisionWithSphere(glm::vec3 sphere_position, float sphere_oscillation_direction){
+	    glm::vec3 dist = sphere_position - position_;
+	   	float penDist = glm::length(dist) - (kSphereRadius+kSphereEps);
+	    glm::vec3 dist_to_change = glm::normalize(dist);
+		dist_to_change = dist_to_change * penDist;    
+
+	    if(penDist < 0)
+	    {
+	        position_.x += dist_to_change.x;
+	        if(dist.x > 0){
+	        	position_.x -= kSphereEps;
+	        } else {
+	        	position_.x += kSphereEps;
+	        }
+	        position_.y += dist_to_change.y;
+	        if(dist.y > 0){
+	        	position_.y -= kSphereEps;
+	        } else {
+	        	position_.y += kSphereEps;
+	        }
+	        position_.z += dist_to_change.z + (kSphereEps * sphere_oscillation_direction);
+	        velocity_ = glm::vec3(0.0f);
+	        force_ = glm::vec3(0.0f);
+	    }
+}
+
 void Cloth::moveSphere(float delta_t){
-	if(sphere_position.z > 20.0f || sphere_position.z < -10.0f){
-		sphere_oscillation_delta = -sphere_oscillation_delta;
+	if(sphere_position.z > 20.0f || sphere_position.z < -20.0f){
+		sphere_oscillation_direction = -sphere_oscillation_direction;
 		
 	}
-	sphere_position.z += (sphere_oscillation_delta*delta_t*2.0f);
+	sphere_position.z += (sphere_oscillation_direction*delta_t*2.0f);
 }
 
 void Cloth::addWind() {
@@ -592,9 +613,14 @@ void Cloth::animate(float delta_t) {
 			bfsConstrain(start_particles);
 		}
 	}
-
-	moveSphere(delta_t);
 	collisionWithFloor();
+
+	if(enable_sphere){
+		if(!pause_sphere){
+			moveSphere(delta_t);
+		}
+		collisionWithSphere();
+	}
 
 	// particle positions determined. Compute vertex normals.
 	for(Particle* p : particles_) {
