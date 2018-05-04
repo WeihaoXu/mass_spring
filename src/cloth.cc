@@ -342,25 +342,32 @@ void Cloth::collisionWithFloor(){
 			p->position_.y = kFloorY + kFloorEps;
 			// p->setFixed();
 			p->velocity_ = glm::vec3(0.0f);
-			// p->force_ = glm::vec3(0.0f);
 		}
 
-		glm::vec3 spherePosition = glm::vec3(10.0f, -20.0f, 5.0f);
-	    glm::vec3 dist = - p->position_ + spherePosition;
+		if(enable_sphere){
+		    glm::vec3 dist = - p->position_ + sphere_position;
+		   	float penDist = glm::length(dist) - (kSphereRadius+kSphereEps);
+		    dist = glm::normalize(dist);
+			dist = dist * penDist;    
 
-	    // float penDist = fabs(p->position_.y + 20.0f) - kSphereRadius;
-	   	float penDist = glm::length(dist) - (kSphereRadius+kSphereEps);
-	    dist = glm::normalize(dist);
-		dist = dist * penDist;    
-
-	    if(penDist < kSphereEps)
-	    {
-	        p->position_.x += dist.x+kSphereEps;
-	        p->position_.y += dist.y+kSphereEps;
-	        p->position_.z += dist.z+kSphereEps;
-	        p->velocity_ = glm::vec3(0.0f);
-	    }
+		    if(penDist < 0) //kSphereEps)
+		    {
+		        p->position_.x += dist.x+kSphereEps;
+		        p->position_.y += dist.y+kSphereEps;
+		        p->position_.z += dist.z+kSphereEps;
+		        // std::cout << glm::to_string(p->force_) << "\n";
+		        p->velocity_ = glm::vec3(0.0f);
+		    }
+		}
 	}
+}
+
+void Cloth::moveSphere(float delta_t){
+	if(sphere_position.z > 20.0f || sphere_position.z < -10.0f){
+		sphere_oscillation_delta = -sphere_oscillation_delta;
+		
+	}
+	sphere_position.z += (sphere_oscillation_delta*delta_t*2.0f);
 }
 
 void Cloth::addWind() {
@@ -518,6 +525,7 @@ void Cloth::refreshCache() {
 
 void Cloth::animate(float delta_t) {
 	// clear all forces except for gravity
+
 	std::vector<Particle*> splitted_particles;
 	for(auto itr = particles_.begin(); itr != particles_.end(); itr++) {
 		std::map<int, std::unordered_set<Particle*>> particle_groups;
@@ -585,6 +593,7 @@ void Cloth::animate(float delta_t) {
 		}
 	}
 
+	moveSphere(delta_t);
 	collisionWithFloor();
 
 	// particle positions determined. Compute vertex normals.
@@ -836,25 +845,3 @@ void Cloth::removeStructSpring(Spring* s) {
 	spring_map_[s->p2_][s->p1_] = nullptr;
 	delete s;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	

@@ -46,6 +46,7 @@ public:
 	bool drawClothEnabled() {return enable_draw_cloth_;}
 	void toggleDrawCloth() {enable_draw_cloth_ = !enable_draw_cloth_;}
 
+	bool drawSphereEnabled() {return cloth_->enable_sphere; }
 	bool drawSpringEnabled() {return enable_draw_spring_;}
 	void toggleDrawSpring() {enable_draw_spring_ = !enable_draw_spring_;}
 

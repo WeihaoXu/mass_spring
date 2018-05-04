@@ -107,8 +107,8 @@ float line_point_distance(glm::vec3& line_start, glm::vec3& line_end, glm::vec3&
 }
 
 void create_sphere(std::vector<glm::vec3>& sphere_vertex, std::vector<glm::vec3>& sphere_normal, std::vector<glm::uvec3>& sphere_indices){
-    const int na=36;        // vertex grid size
-    const int nb=18;
+    const int na=72;        // vertex grid size
+    const int nb=36;
     GLfloat x,y,z,a,b,da,db,r=3.5;
     int ia,ib,ix,iy;
     da=2.0*M_PI/GLfloat(na);

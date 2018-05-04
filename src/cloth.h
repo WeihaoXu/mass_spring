@@ -115,8 +115,9 @@ public:
 	glm::vec3 pick_ray_end = glm::vec3(0.0f);
 	bool to_tear = false;
 	bool enable_wind = false;
+	bool enable_sphere = true;
 
-
+	const glm::vec3& getSpherePosition() const { return sphere_position; }
 private:
 	int getParticleIdx(int x, int z);
 	bool gridCoordValid(int x, int z);	
@@ -141,7 +142,7 @@ private:
 
 	void bfsConstrain(std::queue<Particle*>& q);
 
-
+	void moveSphere(float delta_t);
 
 	std::vector<Particle*> particles_;
 	std::unordered_set<Triangle*> triangles_;	//stored in a hashset for constant time access, modify and delete
@@ -159,6 +160,8 @@ private:
 	std::vector<glm::vec3> wind_directions_;
 	int wind_idx_ = 0;
 
+	float sphere_oscillation_delta = 1.0f;
+	glm::vec3 sphere_position = glm::vec3(10.0f, -15.0f, 5.0f);
 
 	const float grid_width_ = 1.0;
 	const float struct_k_ = 100.0;	// spring constant of bending springs

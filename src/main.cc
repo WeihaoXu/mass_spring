@@ -203,6 +203,9 @@ int main(int argc, char* argv[])
 	auto std_camera_data  = [&gui]() -> const void* {
 		return &gui.getCamera()[0];
 	};
+	auto sphere_position_data  = [&cloth]() -> const void* {
+		return &cloth.getSpherePosition()[0];
+	};
 	auto std_proj_data = [&mats]() -> const void* {
 		return mats.projection;
 	};
@@ -239,6 +242,7 @@ int main(int argc, char* argv[])
 	ShaderUniform identity_model = {"model", matrix_binder, identity_model_data };
 	ShaderUniform sampler_uniform = { "sampler", texture0_binder, sampler_data };
 	ShaderUniform floor_model = { "model", matrix_binder, floor_model_data };
+	ShaderUniform sphere_position = { "sphere_position", vector3_binder, sphere_position_data };
 
 	// FIXME: define more ShaderUniforms for RenderPass if you want to use it.
 	//        Otherwise, do whatever you like here
@@ -297,13 +301,12 @@ int main(int argc, char* argv[])
 	RenderPass sphere_pass(-1,
 			sphere_pass_input,
 			{ sphere_vertex_shader, nullptr, sphere_fragment_shader},
-			{ std_model, std_view, std_proj, std_light },
+			{ std_model, std_view, std_proj, std_light, sphere_position },
 			{ "fragment_color" }
 			);
 
 	toc(timer);
 	bool draw_floor = true;
-	bool draw_sphere = true;
 
 	while (!glfwWindowShouldClose(window)) {
 		// Setup some basic window stuff.
@@ -384,7 +387,7 @@ int main(int argc, char* argv[])
 		}
 
 		
-		if(draw_sphere){
+		if(gui.drawSphereEnabled()){
 			sphere_pass.setup();
 			CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES,
 										sphere_indices.size() * 3,
