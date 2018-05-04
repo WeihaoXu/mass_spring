@@ -1,0 +1,30 @@
+Weihao Xu, Shruti Subramanian
+
+We implemented cloth using a mass spring system. The functionality of our cloth includes:
+    1. Cloth tearing
+    2. Cloth movement dependent on wind
+    3. User interaction with cloth
+    4. Cloth collision with a sphere
+    5. Cloth collision with the floor
+
+User Manual:
+1. Build
+    "mkdir build", "cd build", "cmake ..", "make", "./bin/cloth"
+2. World controls
+    Press "C" to toggle between zoom/fps similar to the menger sponge project
+3. Cloth controls
+    Press "J" to show/hide the springs
+    Press "K" to show/hide the texture
+    Press "R" to reset the cloth
+    Press "CTRL" and use the mouse right click to drag the cloth (you can't drag very far due to constraints we set)
+4. Wind controls
+    Press "T" to start/stop wind
+    Press "-" to decrease wind intensity
+    Press "=" to increase wind intensity
+    Press "P" to change wind direction
+5. Tearing
+    Use the mouse left click to tear the cloth where the mouse is
+6. Sphere controls
+    Press "O" to show/hide the sphere
+    Press "I" to stop/start the movement of the sphere
+
