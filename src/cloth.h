@@ -118,7 +118,7 @@ public:
 	bool enable_wind = false;
 	bool enable_sphere = true;
 	bool pause_sphere = false;
-	float sphere_oscillation_delta = 1.0f;
+	float sphere_oscillation_delta = 2.0f;
 
 	const glm::vec3& getSpherePosition() const { return sphere_position; }
 private:
