@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 	// 				0, ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData()); /* Texture specification */
 	
 
-	glm::vec4 light_position = glm::vec4(10.0f, 2000.0f, -3000.0f, 1.0f);
+	glm::vec4 light_position = glm::vec4(10.0f, 2000.0f, 3000.0f, 1.0f);
 	MatrixPointers mats; // Define MatrixPointers here for lambda to capture
 	/*
 	 * In the following we are going to define several lambda functions to bind Uniforms.
@@ -291,7 +291,10 @@ int main(int argc, char* argv[])
 		cloth.adjustWindForce(gui.getWindFactor());
 		cloth.animate(delta_t);
 		
-
+		if (gui.toToggleWindDirect()) {
+			cloth.toggleWindDirect();
+			gui.clearToggleWindDirectFlag();
+		}
 
 		if (gui.drawClothEnabled()) {
 			glDisable(GL_CULL_FACE);

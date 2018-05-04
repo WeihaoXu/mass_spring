@@ -10,6 +10,7 @@
 
 struct Mesh;
 
+
 /*
  * Hint: call glUniformMatrix4fv on thest pointers
  */
@@ -52,6 +53,10 @@ public:
 	
 	float getTimeSpeed() {return time_speed_;}
 	
+	bool toToggleWindDirect() {return to_toggle_wind_direct_;}
+	void clearToggleWindDirectFlag() {to_toggle_wind_direct_ = false;}
+
+
 
 	const float* getLightPositionPtr() const { return &light_position_[0]; }
 	
@@ -67,9 +72,10 @@ private:
 
 	int window_width_, window_height_;
 
+	bool to_toggle_wind_direct_ = false;
 	bool reset_ms_system_ = false;
 	bool enable_draw_cloth_ = true;
-	bool enable_draw_spring_ = true;
+	bool enable_draw_spring_ = false;
 
 	float wind_factor_ = 1.0f;
 

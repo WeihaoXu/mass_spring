@@ -45,9 +45,11 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 	}
 	if (key == GLFW_KEY_MINUS && action != GLFW_RELEASE) {
 		wind_factor_ /= 1.1f;
+		wind_factor_ = std::max(wind_factor_, 0.5f);
 	}
 	if (key == GLFW_KEY_EQUAL && action != GLFW_RELEASE) {
 		wind_factor_ *= 1.1f;
+		wind_factor_ = std::min(wind_factor_, 1.5f);
 	}
 	if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL) {
 		if(action == GLFW_PRESS) {
@@ -79,7 +81,7 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 	} else if (key == GLFW_KEY_R && action != GLFW_RELEASE) {
 		reset_ms_system_ = true;
 	} else if (key == GLFW_KEY_P && action != GLFW_RELEASE) {
-	
+		to_toggle_wind_direct_ = true;
 	}
 }
 
