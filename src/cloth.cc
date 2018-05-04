@@ -1,4 +1,5 @@
 #include "cloth.h"
+#include "config.h"
 
 
 
@@ -325,6 +326,17 @@ Cloth::~Cloth() {
 
 }
 
+void Cloth::collisionWithFloor(){
+	for(Particle* p : particles_) {
+		if(p->position_.y < kFloorY){
+			// std::cout << "FLOOR HIT ME\n";
+			p->position_.y = kFloorY + kFloorEps;
+			p->setFixed();
+			// p->velocity_ = glm::vec3(0.0f);
+			// p->force_ = glm::vec3(0.0f);
+		}
+	}
+}
 
 void Cloth::addWind() {
 	for(Triangle* t : triangles_) {
@@ -543,6 +555,7 @@ void Cloth::animate(float delta_t) {
 		}
 	}
 
+	collisionWithFloor();
 
 	// particle positions determined. Compute vertex normals.
 	for(Particle* p : particles_) {

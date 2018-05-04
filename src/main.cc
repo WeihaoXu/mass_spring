@@ -69,6 +69,10 @@ const char* bend_spring_vertex_shader =
 const char* bend_spring_fragment_shader =
 #include "shaders/bend_spring.frag"
 ;
+
+const char* floor_fragment_shader =
+#include "shaders/floor.frag"
+;
 // FIXME: Add more shaders here.
 
 void ErrorCallback(int error, const char* description) {
@@ -105,6 +109,10 @@ int main(int argc, char* argv[])
 
 	GLFWwindow *window = init_glefw();
 	GUI gui(window);
+
+	std::vector<glm::vec4> floor_vertices;
+	std::vector<glm::uvec3> floor_faces;
+	create_floor(floor_vertices, floor_faces);
 
 	// create cloth
 	int cloth_x_size = 21;
@@ -171,6 +179,10 @@ int main(int argc, char* argv[])
 	auto std_model_data = [&mats]() -> const void* {
 		return mats.model;
 	};
+	glm::mat4 floor_model_matrix = glm::mat4(1.0f);
+	auto floor_model_data = [&floor_model_matrix]() -> const void* {
+		return &floor_model_matrix[0][0];
+	};
 	auto std_view_data = [&mats]() -> const void* {
 		return mats.view;
 	};
@@ -212,11 +224,21 @@ int main(int argc, char* argv[])
 	ShaderUniform object_alpha = { "alpha", float_binder, alpha_data };
 	ShaderUniform identity_model = {"model", matrix_binder, identity_model_data };
 	ShaderUniform sampler_uniform = { "sampler", texture0_binder, sampler_data };
+	ShaderUniform floor_model = { "model", matrix_binder, floor_model_data };
 
 	// FIXME: define more ShaderUniforms for RenderPass if you want to use it.
 	//        Otherwise, do whatever you like here
 
-
+	// Floor render pass
+	RenderDataInput floor_pass_input;
+	floor_pass_input.assign(0, "vertex_position", floor_vertices.data(), floor_vertices.size(), 4, GL_FLOAT);
+	floor_pass_input.assignIndex(floor_faces.data(), floor_faces.size(), 3);
+	RenderPass floor_pass(-1,
+			floor_pass_input,
+			{ vertex_shader, geometry_shader, floor_fragment_shader},
+			{ floor_model, std_view, std_proj, std_light },
+			{ "fragment_color" }
+			);
 	
 	// Cloth render pass
 	RenderDataInput cloth_pass_input;
@@ -256,6 +278,8 @@ int main(int argc, char* argv[])
 
 
 	toc(timer);
+	bool draw_floor = true;
+
 	while (!glfwWindowShouldClose(window)) {
 		// Setup some basic window stuff.
 		glfwGetFramebufferSize(window, &window_width, &window_height);
@@ -325,7 +349,14 @@ int main(int argc, char* argv[])
 
 		}
 
-	
+		if (draw_floor) {
+			floor_pass.setup();
+			// Draw our triangles.
+			CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES,
+			                              floor_faces.size() * 3,
+			                              GL_UNSIGNED_INT, 0));
+
+		}
 
 		
 

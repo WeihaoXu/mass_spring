@@ -122,6 +122,7 @@ private:
 	void refreshCache();	// update the cache for rendiering
 	void setInitAnchorNodes();
 	void tear(Spring* s);
+	void collisionWithFloor();
 	Particle* getNeighborParticle(Triangle* t1, Spring* s);
 	bool containsStructSpring(Particle* p1, Particle* p2);
 	Spring* addStructSpring(Particle* p1, Particle* p2, float k, bool is_secondary);
