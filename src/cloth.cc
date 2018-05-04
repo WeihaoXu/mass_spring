@@ -348,16 +348,30 @@ void Cloth::collisionWithFloor(){
 
 void Cloth::collisionWithSphere(){
 	for(Spring* s: springs_){
-		s->p1_->particleCollisionWithSphere(sphere_position, sphere_oscillation_direction);
-		s->p2_->particleCollisionWithSphere(sphere_position, sphere_oscillation_direction);
+		s->p1_->particleCollisionWithSphere(sphere_position);
+		s->p2_->particleCollisionWithSphere(sphere_position);
 		if(s->bend_spring_ != nullptr){
-			s->bend_spring_->p1_->particleCollisionWithSphere(sphere_position, sphere_oscillation_direction);
-			s->bend_spring_->p2_->particleCollisionWithSphere(sphere_position, sphere_oscillation_direction);
+			s->bend_spring_->p1_->particleCollisionWithSphere(sphere_position);
+			s->bend_spring_->p2_->particleCollisionWithSphere(sphere_position);
 		}
 	}
+	// for(Triangle* t: triangles_){
+	// 	Particle* p = *(t->particles_.begin());
+	// 	glm::vec3 particle_dist = sphere_position - p->position_;
+	// 	float dot_product = fabs(glm::dot(particle_dist, t->face_normal_));
+	// 	glm::vec3 perpendicular = particle_dist - t->face_normal_*dot_product;
+	// 	float dist = glm::length(perpendicular) - (kSphereRadius+kSphereEps);
+	// 	if(dist < 0) {
+	//         p->position_.x += dist; //perpendicular.x;
+	//         p->position_.y += dist; //perpendicular.y;
+	//         p->position_.z += dist; //perpendicular.z;
+	//         p->velocity_ = glm::vec3(0.0f);
+	//         p->force_ = glm::vec3(0.0f);
+	//     }
+	// }
 }
 
-void Particle::particleCollisionWithSphere(glm::vec3 sphere_position, float sphere_oscillation_direction){
+void Particle::particleCollisionWithSphere(glm::vec3 sphere_position){
 	    glm::vec3 dist = sphere_position - position_;
 	   	float penDist = glm::length(dist) - (kSphereRadius+kSphereEps);
 	    glm::vec3 dist_to_change = glm::normalize(dist);
@@ -378,7 +392,7 @@ void Cloth::moveSphere(float delta_t){
 		sphere_oscillation_direction = -sphere_oscillation_direction;
 		
 	}
-	sphere_position.z += (sphere_oscillation_direction*delta_t*2.0f);
+	sphere_position.z += (sphere_oscillation_direction*delta_t) * sphere_oscillation_delta;
 }
 
 void Cloth::addWind() {

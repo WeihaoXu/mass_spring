@@ -50,7 +50,7 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 	if (key == GLFW_KEY_EQUAL && action != GLFW_RELEASE) {
 		wind_factor_ *= 1.1f;
 		wind_factor_ = std::min(wind_factor_, 1.5f);
-	}
+	} 
 	if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL) {
 		if(action == GLFW_PRESS) {
 			control_pressed_ = true;
@@ -82,6 +82,16 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 		cloth_->enable_sphere = !cloth_->enable_sphere;
 	} else if (key == GLFW_KEY_I && action != GLFW_RELEASE) {
 		cloth_->pause_sphere = !cloth_->pause_sphere;
+	}  else if (key == GLFW_KEY_N && action == GLFW_RELEASE) {
+		if(cloth_->sphere_oscillation_delta > 1.0f){
+			cloth_->sphere_oscillation_delta -= 1.0f;
+		}
+		// std::cout << cloth_->sphere_oscillation_delta  << "\n";
+	} else if (key == GLFW_KEY_M && action == GLFW_RELEASE) {
+		if(cloth_->sphere_oscillation_delta < 3.0f){
+			cloth_->sphere_oscillation_delta += 1.0f;
+		}
+		// std::cout << cloth_->sphere_oscillation_delta  << "\n";
 	} else if (key == GLFW_KEY_R && action != GLFW_RELEASE) {
 		reset_ms_system_ = true;
 	} else if (key == GLFW_KEY_P && action != GLFW_RELEASE) {

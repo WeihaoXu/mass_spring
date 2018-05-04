@@ -33,7 +33,7 @@ struct Particle {
 	void setFixed();
 	void setMovable();
 	void move(glm::vec3 dist);
-	void particleCollisionWithSphere(glm::vec3 sphere_position, float sphere_oscillation_direction);
+	void particleCollisionWithSphere(glm::vec3 sphere_position);
 
 	glm::vec3 position_;
 	glm::vec3 init_position_;
@@ -118,6 +118,7 @@ public:
 	bool enable_wind = false;
 	bool enable_sphere = true;
 	bool pause_sphere = false;
+	float sphere_oscillation_delta = 1.0f;
 
 	const glm::vec3& getSpherePosition() const { return sphere_position; }
 private:
