@@ -398,9 +398,9 @@ void Cloth::moveSphere(float delta_t){
 void Cloth::addWind() {
 	for(Triangle* t : triangles_) {
 		glm::vec3 wind_force_amp = wind_directions_[wind_idx_] * wind_force_quantity_ * wind_factor_; 
-		glm::vec3 curr_wind_force = wind_force_amp * (sin(time_ * 10.0f) * 0.5f + 0.5f);
+		glm::vec3 curr_wind_force = wind_force_amp * (float) (sin(time_ * 10.0f) * 0.5f + 0.5f);
 		// glm::vec3 curr_wind_force = wind_force_;
-		glm::vec3 projected_force = wind_directions_[wind_idx_] * fabs(glm::dot(t->face_normal_, curr_wind_force));
+		glm::vec3 projected_force = wind_directions_[wind_idx_] * (float) fabs(glm::dot(t->face_normal_, curr_wind_force));
 		for(Particle* p : t->particles_) {
 			p->force_ += projected_force;
 		}
